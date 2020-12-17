@@ -1,0 +1,994 @@
+[
+    {
+        "id": "d2b21613.ad4a58",
+        "type": "tab",
+        "label": "culfw inkomende berichten",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "74b15cb6.0ee3c4",
+        "type": "debug",
+        "z": "d2b21613.ad4a58",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 790,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "85df21ea.37965",
+        "type": "tcp in",
+        "z": "d2b21613.ad4a58",
+        "name": "",
+        "server": "client",
+        "host": "10.0.250.65",
+        "port": "2323",
+        "datamode": "stream",
+        "datatype": "utf8",
+        "newline": "",
+        "topic": "",
+        "base64": false,
+        "x": 160,
+        "y": 420,
+        "wires": [
+            [
+                "74b15cb6.0ee3c4",
+                "888b6aa3.4bfd78"
+            ]
+        ]
+    },
+    {
+        "id": "2f892c1e.2edfd4",
+        "type": "function",
+        "z": "d2b21613.ad4a58",
+        "name": "Parse base info",
+        "func": "// complete bericht komt hier binnen \n//\n\nvar msgId2Cmd = {\n    \t\"00\" : \"PairPing\",\n        \"01\" : \"PairPong\",\n        \"02\" : \"Ack\",\n        \"03\" : \"TimeInformation\",\n        \"10\" : \"ConfigWeekProfile\",\n        \"11\" : \"ConfigTemperatures\", //like eco/comfort etc\n        \"12\" : \"ConfigValve\",\n        \"20\" : \"AddLinkPartner\",\n        \"21\" : \"RemoveLinkPartner\",\n        \"22\" : \"SetGroupId\",\n        \"23\" : \"RemoveGroupId\",\n        \"30\" : \"ShutterContactState\",\n        \"40\" : \"SetTemperature\", //to thermostat\n        \"42\" : \"WallThermostatControl\", //by WallMountedThermostat\n        //Sending this without payload to thermostat sets desiredTemperature to the comfort/eco temperature\n        //We don't use it, we just do SetTemperature\n        \"43\" : \"SetComfortTemperature\",\n        \"44\" : \"SetEcoTemperature\",\n        \"50\" : \"PushButtonState\",\n        \"60\" : \"ThermostatState\", //by HeatingThermostat\n        \"70\" : \"WallThermostatState\",\n        \"82\" : \"SetDisplayActualTemperature\",\n        \"F1\" : \"WakeUp\",\n        \"F0\" : \"Reset\",\n};\n\n\nvar raw = msg.payload;\nvar obj = {};\n\nobj.msgCnt = raw.substr(3,2);\nobj.msgFlag = raw.substr(5,2);\nobj.msgTypeRaw = raw.substr(7,2);\nobj.msgType = msgId2Cmd[obj.msgTypeRaw] ? msgId2Cmd[obj.msgTypeRaw] : obj.msgTypeRaw;\nobj.deviceId = raw.substr(9,6).toLowerCase();\nobj.dest = raw.substr( 15,6).toLowerCase();\n\nobj.groupid = parseInt( Number(\"0x\"+raw.substr(21,2)) , 10 );\n\nobj.payload = raw.substr(23, (2*raw.length - 18));\n\n\nmsg.payload = obj;\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 540,
+        "y": 580,
+        "wires": [
+            [
+                "e513ed74.cb216",
+                "234c19b3.2ffb36"
+            ]
+        ]
+    },
+    {
+        "id": "e513ed74.cb216",
+        "type": "debug",
+        "z": "d2b21613.ad4a58",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 770,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "da991879.f3a6b8",
+        "type": "function",
+        "z": "d2b21613.ad4a58",
+        "name": "Eerste karakter",
+        "func": "var raw = msg.payload;\nvar eerste = raw.substr(0,1);\n\nvar msg1= null;\nvar msg2 = null;\n\nif( eerste != 'Z' ){\n    msg1 = {payload: raw };\n}\nelse{\n    msg2 = {payload: raw };\n}\n\nreturn [ msg1 , msg2 ];",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 420,
+        "y": 480,
+        "wires": [
+            [
+                "e513ed74.cb216"
+            ],
+            [
+                "5a043514.1e126c"
+            ]
+        ]
+    },
+    {
+        "id": "5a043514.1e126c",
+        "type": "function",
+        "z": "d2b21613.ad4a58",
+        "name": "Controle lengte",
+        "func": "var raw = msg.payload;\n\nvar hexStr = \"0x\"+raw.substr(1,2);\nvar len = parseInt( Number(hexStr) , 10 );\nif( len*2 + 3 != raw.length){\n    msg.payload = 'error lengte '+raw.length + \"  \" + len;\n}\n\n\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 300,
+        "y": 580,
+        "wires": [
+            [
+                "2f892c1e.2edfd4",
+                "e513ed74.cb216"
+            ]
+        ]
+    },
+    {
+        "id": "c7a16039.936e9",
+        "type": "inject",
+        "z": "d2b21613.ad4a58",
+        "name": "Z0C26044213D5620000000021DC",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "Z0C26044213D5620000000021DC",
+        "payloadType": "str",
+        "x": 440,
+        "y": 1680,
+        "wires": [
+            [
+                "af006ec9.a19bd"
+            ]
+        ]
+    },
+    {
+        "id": "fc43a46d.8517f8",
+        "type": "comment",
+        "z": "d2b21613.ad4a58",
+        "name": "Op basis van: ",
+        "info": "Code overgenomen uit: \n https://github.com/hobbyquaker/cul/blob/master/lib/moritz.js\nen\n https://gl.petatech.eu/root/HomeBot/-/blob/7afa28792a9ffbb35c9302fa1d174c354883f665/FHEM/14_CUL_MAX.pm",
+        "x": 130,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "b74e66b7.d24458",
+        "type": "inject",
+        "z": "d2b21613.ad4a58",
+        "name": "Z0F000460137BFC00000000190C2C00F0",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "Z0F000460137BFC00000000190C2C00F0",
+        "payloadType": "str",
+        "x": 460,
+        "y": 1720,
+        "wires": [
+            [
+                "af006ec9.a19bd"
+            ]
+        ]
+    },
+    {
+        "id": "c7fea7e9.cfb6f8",
+        "type": "debug",
+        "z": "d2b21613.ad4a58",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1030,
+        "y": 740,
+        "wires": []
+    },
+    {
+        "id": "d11f4fd7.02d32",
+        "type": "switch",
+        "z": "d2b21613.ad4a58",
+        "name": "splits op msgTypeRaw",
+        "property": "payload.msgTypeRaw",
+        "propertyType": "jsonata",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "00",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "01",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "03",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "11",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "20",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "22",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "30",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "40",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "42",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "60",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "F1",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 11,
+        "x": 380,
+        "y": 800,
+        "wires": [
+            [
+                "7f0f46d.2e4c6b8"
+            ],
+            [
+                "dffca064.9ceec"
+            ],
+            [
+                "ffede942.fdb068"
+            ],
+            [
+                "91ef6c3e.5418c"
+            ],
+            [
+                "b1c39d08.78a2e"
+            ],
+            [
+                "1b1f05ac.af7dba"
+            ],
+            [
+                "ec986c0f.75754"
+            ],
+            [
+                "55e7599e.ba9f18"
+            ],
+            [
+                "e89745d6.ef7848"
+            ],
+            [
+                "2df3b610.a611da"
+            ],
+            [
+                "c462c16.e1b734"
+            ]
+        ]
+    },
+    {
+        "id": "e89745d6.ef7848",
+        "type": "function",
+        "z": "d2b21613.ad4a58",
+        "name": "42 = WallThermostatControl",
+        "func": "var data = msg.payload.payload;\n\nvar hexStr = \"0x\"+data.substr(0,2);\nvar tmp = parseInt( Number(hexStr) , 10 );\nmsg.payload.desiredTemperatureRaw = tmp;\n\nhexStr = \"0x\"+data.substr(2,2);\ntmp = parseInt( Number(hexStr) , 10 );\nmsg.payload.measuredTemperature = tmp;\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 660,
+        "y": 1020,
+        "wires": [
+            [
+                "c7fea7e9.cfb6f8"
+            ]
+        ]
+    },
+    {
+        "id": "888b6aa3.4bfd78",
+        "type": "function",
+        "z": "d2b21613.ad4a58",
+        "name": "Strip crlf",
+        "func": "// haal CRLF eraf\nvar raw=msg.payload;\nmsg.payload = raw.substr(0, raw.length - 2 );\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 240,
+        "y": 480,
+        "wires": [
+            [
+                "da991879.f3a6b8"
+            ]
+        ]
+    },
+    {
+        "id": "2df3b610.a611da",
+        "type": "function",
+        "z": "d2b21613.ad4a58",
+        "name": "60 = ThermostatState",
+        "func": "function getBits(value, offset, len) {\n        var mask = 0;\n        while (len > 0) {\n                mask = mask << 1;\n                mask++;\n                len--;\n        }\n        return ((value >> offset) & mask);\n}\n\nfunction MAX_ParseDateTime(byte1, byte2, byte3) {\n\tvar result = {};\n\tresult.day = byte1 & 0x1F;\n\tresult.month = ((byte1 & 0xE0) >> 4) | (byte2 >> 7);\n\tresult.year = byte2 & 0x3F;\n\tvar time = byte3 & 0x3F;\n\tif ((time % 2) > 0)\n\t\tresult.time = (time / 2) + \":30\";\n\telse\n\t\tresult.time = (time / 2) + \":00\";\n\n\tresult.str = result.day+\".\"+result.month+\".\"+result.year+\" \"+result.time;\n\treturn result;\n}\n\nvar ctrl_modes = { \n\t'0' : \"auto\",\n\t'1' : \"manual\",\n\t'2' : \"temporary\",\n\t'3' : \"boost\",\n}; \n\nvar obj = msg.payload;\nvar data = msg.payload.payload;\n\nvar bits2 = parseInt( Number(\"0x\"+data.substr(0,2)) , 10 );\n\nobj.valveposition = parseInt( Number(\"0x\"+data.substr(2,2)) , 10 );\nobj.desiredTemperatureRaw = parseInt( Number(\"0x\"+data.substr(4,2)) , 10 );\n\nvar until1 = parseInt( Number(\"0x\"+data.substr(6,2)) , 10 );\nvar until2 = parseInt( Number(\"0x\"+data.substr(8,2)) , 10 );\nvar until3 = parseInt( Number(\"0x\"+data.substr(10,2)) , 10 );\n\nobj.mode = getBits(bits2, 0, 2);\nobj.modeStr = ctrl_modes[obj.mode] ? ctrl_modes[obj.mode] : obj.mode;\nobj.dstsetting = getBits(bits2, 3, 1); //is automatically switching to DST activated\nobj.langateway = getBits(bits2, 4, 1); //??\nobj.panel = getBits(bits2, 5, 1); //1 if the heating thermostat is locked for manually setting the temperature at the device\nobj.rferror = getBits(bits2, 6, 1); //communication with link partner (what does that mean?)\nobj.batterylow = getBits(bits2, 7, 1); //1 if battery is low\nobj.battery = obj.batterylow ? \"low\" : \"ok\";\n\nif (until3 > 0) data.untilStr = MAX_ParseDateTime(until1, until2, until3);\nobj.measuredTemperature = (until2 > 0) ? (((until1 & 0x01)<<8) + until2) : 0;\n//If the control mode is not \"temporary\", the cube sends the current (measured) temperature\nif ((obj.mode == 2) || (obj.measuredTemperature == 0)) obj.measuredTemperature = null;\nif (obj.mode != 2) delete obj.untilStr;\n\n\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 640,
+        "y": 1060,
+        "wires": [
+            [
+                "c7fea7e9.cfb6f8"
+            ]
+        ]
+    },
+    {
+        "id": "ec986c0f.75754",
+        "type": "function",
+        "z": "d2b21613.ad4a58",
+        "name": "30= ShutterContactState",
+        "func": "function getBits(value, offset, len) {\n        var mask = 0;\n        while (len > 0) {\n                mask = mask << 1;\n                mask++;\n                len--;\n        }\n        return ((value >> offset) & mask);\n}\n\nvar obj = msg.payload;\nvar data = msg.payload.payload;\n\nvar bits = (\"0x\"+data.substr(0,2))*1;\nobj.isopen = (getBits(bits, 0, 2) === 0) ? 0 : 1;\nobj.unkbits = getBits(bits, 2, 4);\nobj.rferror = getBits(bits, 6, 1);\nobj.batterylow = getBits(bits, 7, 1);\nobj.battery = data.batterylow ? \"low\" : \"ok\";\n\t\t\nmsg.payload = obj;\t\t\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 650,
+        "y": 940,
+        "wires": [
+            [
+                "c7fea7e9.cfb6f8"
+            ]
+        ]
+    },
+    {
+        "id": "19733345.a4cf1d",
+        "type": "inject",
+        "z": "d2b21613.ad4a58",
+        "name": "PairPing",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "Z170000000FB74E0EE127001004004C455131313132363539",
+        "payloadType": "str",
+        "x": 360,
+        "y": 1760,
+        "wires": [
+            [
+                "af006ec9.a19bd"
+            ]
+        ]
+    },
+    {
+        "id": "7f0f46d.2e4c6b8",
+        "type": "function",
+        "z": "d2b21613.ad4a58",
+        "name": "00 = PairPing",
+        "func": "function hex_to_ascii(str1)\n {\n\tvar hex  = str1.toString();\n\tvar str = '';\n\tfor (var n = 0; n < hex.length; n += 2) {\n\t\tstr += String.fromCharCode(parseInt(hex.substr(n, 2), 16));\n\t}\n\treturn str;\n }\n\nvar obj = msg.payload;\nvar data = msg.payload.payload;\n\nobj.firmware = parseInt( Number(\"0x\"+data.substr(0,2)) , 10 );\nobj.deviceType = parseInt( Number(\"0x\"+data.substr(2,2)) , 10 );\nobj.testresult = parseInt( Number(\"0x\"+data.substr(4,2)) , 10 );\nobj.serial = hex_to_ascii(data.substr(6));\n\nmsg.culfw.BezigMet = 1;\n\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 620,
+        "y": 700,
+        "wires": [
+            [
+                "86582ae8.52a6d8",
+                "c7fea7e9.cfb6f8"
+            ]
+        ]
+    },
+    {
+        "id": "2e667db3.cd6322",
+        "type": "inject",
+        "z": "d2b21613.ad4a58",
+        "name": "Set Temperature",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "Z0EE0054017D0C0137BFC0463000000",
+        "payloadType": "str",
+        "x": 380,
+        "y": 1800,
+        "wires": [
+            [
+                "af006ec9.a19bd"
+            ]
+        ]
+    },
+    {
+        "id": "55e7599e.ba9f18",
+        "type": "function",
+        "z": "d2b21613.ad4a58",
+        "name": "40 = SetTemperature",
+        "func": "var ctrl_modes = { \n\t'0' : \"auto\",\n\t'1' : \"manual\",\n\t'2' : \"temporary\",\n\t'3' : \"boost\",\n}; \n\nvar obj = msg.payload;\nvar data = obj.payload;\n\n\nvar bits =  (\"0x\"+data.substr(0,2))*1;\nmsg.payload.mode = bits >> 6;\nmsg.payload.modeStr = ctrl_modes[msg.payload.mode] ? ctrl_modes[msg.payload.mode] : msg.payload.mode;\nmsg.payload.desiredTemperature = (bits & 0x3F) / 2.0; // Convert to degree celcius.\n\t\t\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 640,
+        "y": 980,
+        "wires": [
+            [
+                "c7fea7e9.cfb6f8"
+            ]
+        ]
+    },
+    {
+        "id": "cbc3dc99.783df",
+        "type": "inject",
+        "z": "d2b21613.ad4a58",
+        "name": "TimeInformation",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "Z0F5C050317D0C0137C0800140F56F012",
+        "payloadType": "str",
+        "x": 380,
+        "y": 1840,
+        "wires": [
+            [
+                "af006ec9.a19bd"
+            ]
+        ]
+    },
+    {
+        "id": "ffede942.fdb068",
+        "type": "function",
+        "z": "d2b21613.ad4a58",
+        "name": "03 = Time Information",
+        "func": "var obj = msg.payload;\nvar data = obj.payload;\n\nobj.year = 2000+ (\"0x\"+data.substr(0,2))*1;\nobj.day =  (\"0x\"+data.substr(2,2))*1;\nobj.hour =  ((\"0x\"+data.substr(4,2))*1 ) & 0x1F;\nobj.min =  ((\"0x\"+data.substr(6,2))*1) & 0x3F;\nobj.sec = ((\"0x\"+data.substr(8,2))*1) & 0x3F;\nobj.month = ((((\"0x\"+data.substr(6,2))*1) >> 6) << 2) | (((\"0x\"+data.substr(8,2))*1) >> 6); // this is just guessed according to FHEM\nobj.unk1 = ((\"0x\"+data.substr(4,2))*1 ) >> 5;\nobj.unk2 = ((\"0x\"+data.substr(6,2))*1 ) >> 6;\nobj.unk3 = ((\"0x\"+data.substr(8,2))*1 ) >> 6;\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 640,
+        "y": 780,
+        "wires": [
+            [
+                "c7fea7e9.cfb6f8"
+            ]
+        ]
+    },
+    {
+        "id": "af006ec9.a19bd",
+        "type": "link out",
+        "z": "d2b21613.ad4a58",
+        "name": "Debug berichten UIT",
+        "links": [
+            "23385428.0b0dec"
+        ],
+        "x": 795,
+        "y": 1900,
+        "wires": []
+    },
+    {
+        "id": "23385428.0b0dec",
+        "type": "link in",
+        "z": "d2b21613.ad4a58",
+        "name": "Debug berichten IN",
+        "links": [
+            "af006ec9.a19bd"
+        ],
+        "x": 95,
+        "y": 540,
+        "wires": [
+            [
+                "da991879.f3a6b8"
+            ]
+        ]
+    },
+    {
+        "id": "66b77563.aaf92c",
+        "type": "file",
+        "z": "d2b21613.ad4a58",
+        "name": "Log to c:\\1\\log.txt",
+        "filename": "c:\\1\\log.txt",
+        "appendNewline": true,
+        "createDir": false,
+        "overwriteFile": "false",
+        "encoding": "none",
+        "x": 810,
+        "y": 340,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "ac53103a.485f1",
+        "type": "inject",
+        "z": "d2b21613.ad4a58",
+        "name": "PairPong",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "Z0B85000117D0C0137A0A0000",
+        "payloadType": "str",
+        "x": 360,
+        "y": 1880,
+        "wires": [
+            [
+                "af006ec9.a19bd"
+            ]
+        ]
+    },
+    {
+        "id": "dffca064.9ceec",
+        "type": "function",
+        "z": "d2b21613.ad4a58",
+        "name": "01 = PairPong",
+        "func": "\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 620,
+        "y": 740,
+        "wires": [
+            [
+                "c7fea7e9.cfb6f8"
+            ]
+        ]
+    },
+    {
+        "id": "4b0f94be.77857c",
+        "type": "inject",
+        "z": "d2b21613.ad4a58",
+        "name": "Ack",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "Z0E850202137A0A17D0C00001190F28",
+        "payloadType": "str",
+        "x": 350,
+        "y": 1920,
+        "wires": [
+            [
+                "af006ec9.a19bd"
+            ]
+        ]
+    },
+    {
+        "id": "abfcf9b5.d7f458",
+        "type": "inject",
+        "z": "d2b21613.ad4a58",
+        "name": "Wakeup",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "Z0BA400F117D0C0137A0A003F",
+        "payloadType": "str",
+        "x": 360,
+        "y": 1960,
+        "wires": [
+            [
+                "af006ec9.a19bd"
+            ]
+        ]
+    },
+    {
+        "id": "1a535beb.911ad4",
+        "type": "inject",
+        "z": "d2b21613.ad4a58",
+        "name": "AddLinkPartner",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "Z0E66002017D0C0137C0800137A0A01",
+        "payloadType": "str",
+        "x": 380,
+        "y": 2000,
+        "wires": [
+            [
+                "af006ec9.a19bd"
+            ]
+        ]
+    },
+    {
+        "id": "62a12515.ff931c",
+        "type": "inject",
+        "z": "d2b21613.ad4a58",
+        "name": "SetGroupId",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "Z0BA8002217D0C0137A0A0001",
+        "payloadType": "str",
+        "x": 370,
+        "y": 2040,
+        "wires": [
+            [
+                "af006ec9.a19bd"
+            ]
+        ]
+    },
+    {
+        "id": "b5107803.73f678",
+        "type": "inject",
+        "z": "d2b21613.ad4a58",
+        "name": "ConfigTemperatures",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "Z11E6001117D0C01171A7002A213D09071803",
+        "payloadType": "str",
+        "x": 390,
+        "y": 2080,
+        "wires": [
+            [
+                "af006ec9.a19bd"
+            ]
+        ]
+    },
+    {
+        "id": "397af9b2.b51f06",
+        "type": "inject",
+        "z": "d2b21613.ad4a58",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "Z11AB001117D0C0137A0A002A213D09071803",
+        "payloadType": "str",
+        "x": 350,
+        "y": 2120,
+        "wires": [
+            [
+                "af006ec9.a19bd"
+            ]
+        ]
+    },
+    {
+        "id": "91ef6c3e.5418c",
+        "type": "function",
+        "z": "d2b21613.ad4a58",
+        "name": "11 = ConfigTemperatures",
+        "func": "\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 650,
+        "y": 820,
+        "wires": [
+            [
+                "c7fea7e9.cfb6f8"
+            ]
+        ]
+    },
+    {
+        "id": "b1c39d08.78a2e",
+        "type": "function",
+        "z": "d2b21613.ad4a58",
+        "name": "20 = AddLinkPartner",
+        "func": "\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 640,
+        "y": 860,
+        "wires": [
+            [
+                "c7fea7e9.cfb6f8"
+            ]
+        ]
+    },
+    {
+        "id": "c462c16.e1b734",
+        "type": "function",
+        "z": "d2b21613.ad4a58",
+        "name": "F1 = WakeUp",
+        "func": "\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 620,
+        "y": 1100,
+        "wires": [
+            [
+                "c7fea7e9.cfb6f8"
+            ]
+        ]
+    },
+    {
+        "id": "1b1f05ac.af7dba",
+        "type": "function",
+        "z": "d2b21613.ad4a58",
+        "name": "22 = SetGroupId",
+        "func": "\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 620,
+        "y": 900,
+        "wires": [
+            [
+                "c7fea7e9.cfb6f8"
+            ]
+        ]
+    },
+    {
+        "id": "86582ae8.52a6d8",
+        "type": "link out",
+        "z": "d2b21613.ad4a58",
+        "name": "Start Pairing",
+        "links": [
+            "c0f634ea.02f798"
+        ],
+        "x": 795,
+        "y": 700,
+        "wires": []
+    },
+    {
+        "id": "fbb5ac95.f67d3",
+        "type": "comment",
+        "z": "d2b21613.ad4a58",
+        "name": "Werking",
+        "info": "De berichten kunnen ongevraagd toekomen, daarom wordt per device bijgehouden \nop welke stap van de communicatie het zich bevindt.\n\nIeder device dat communiceert wordt daarom opgeslagen in een afzonderlijk context object\n\nWanneer een nieuw bericht van een device toekomt, wordt de toestand bekeken.\nBij een timeout, wordt BezigMet op -1 gezet => device is free.\n\n    culfw = {\n                DeviceId: device-id\n                LastMessage: datetime,\n                BezigMet: bericht-type,\n                Stap: aktie stap\n            }\n             \n    de context variable noemt \"culfw_<deviceid>\"\n    \n    BezigMet wordt geupdate in de handler van het bericht.\n\nvanaf de functie \"Update culfw status object\" wordt het culfw object meegegeven in een msg.culfw property\n\n    BezigMet = 1 -> pairing\n        Stap -1 -> nog niet geantwoord\n        Stap 1 -> PairPong sent, waiting for Ack\n        ",
+        "x": 110,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "234c19b3.2ffb36",
+        "type": "function",
+        "z": "d2b21613.ad4a58",
+        "name": "Update culfw status object",
+        "func": "var objIn = msg.payload;\n\nvar culfwNaam = \"culfw_\"+objIn.deviceId;\nvar culfw = context.get(culfwNaam) || {};\n\nif( culfw.LastMessage === undefined || culfw.LastMessage === null)\n{\n    culfw = {\n        Naam: culfwNaam,\n        LastMessage: Date.now(),\n        TimeOut: -1,\n        BezigMet: -1,\n        Stap: -1\n    };\n}\n\n// tijd wordt hier altijd aangepast\nculfw.LastMessage = Date.now();\n\ncontext.set(culfw.Naam,culfw);\n\nmsg.culfw = culfw;\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 790,
+        "y": 580,
+        "wires": [
+            [
+                "b4a60291.ad89a",
+                "73093bc5.28ceb4"
+            ]
+        ]
+    },
+    {
+        "id": "b4a60291.ad89a",
+        "type": "debug",
+        "z": "d2b21613.ad4a58",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1080,
+        "y": 560,
+        "wires": []
+    },
+    {
+        "id": "73093bc5.28ceb4",
+        "type": "switch",
+        "z": "d2b21613.ad4a58",
+        "name": "Ack?",
+        "property": "payload.msgTypeRaw",
+        "propertyType": "jsonata",
+        "rules": [
+            {
+                "t": "neq",
+                "v": "02",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "02",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 130,
+        "y": 780,
+        "wires": [
+            [
+                "d11f4fd7.02d32"
+            ],
+            [
+                "6c5f9224.2b5d8c"
+            ]
+        ]
+    },
+    {
+        "id": "6c5f9224.2b5d8c",
+        "type": "switch",
+        "z": "d2b21613.ad4a58",
+        "name": "Switch on  culfw.BezigMet",
+        "property": "culfw.BezigMet",
+        "propertyType": "jsonata",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "num"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 170,
+        "y": 1140,
+        "wires": [
+            [
+                "43f12c86.9dd704"
+            ]
+        ]
+    },
+    {
+        "id": "43f12c86.9dd704",
+        "type": "link out",
+        "z": "d2b21613.ad4a58",
+        "name": "",
+        "links": [
+            "13dab2e2.82474d",
+            "c0f634ea.02f798"
+        ],
+        "x": 375,
+        "y": 1140,
+        "wires": []
+    }
+]

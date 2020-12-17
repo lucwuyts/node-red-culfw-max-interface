@@ -1,0 +1,379 @@
+[
+    {
+        "id": "4eef0155.6397c",
+        "type": "tab",
+        "label": "culfw  -  uitgaande berichten",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "cdeeb387.4cd0a",
+        "type": "function",
+        "z": "4eef0155.6397c",
+        "name": "Stuur PairPong of Reset",
+        "func": "/*  PairPing received \n\n*/\n\nvar culfw = msg.culfw;\nculfw.BezigMet = 1;\n\n// voeg de ID van het apparaat toe aan culfw\nculfw.serial = msg.payload.serial;\n\n\n\nvar obj = {};\n\n// Indien dest niet \"000000\" is, is dit apparaat nog gepaard met een ander.\n// maar ook niet onszelf\nif( msg.payload.dest != \"001122\" && msg.payload.dest != \"000000\"){\n    // RESET\n    obj.msgType = \"F0\";             // reset\n    obj.dest = msg.payload.deviceId;\n    obj.groupId = \"00\";\n    obj.payload = \"00\";\n    culfw.Stap = 1;                 // wacht op Ack\n    msg.sender = msg.payload.dest;  // verstuur dit bericht in een ander zijn naam.\n}\nelse{\n    obj.msgType = \"01\";             // pairpong\n    obj.dest = msg.payload.deviceId;\n    obj.groupId = \"00\";\n    obj.payload = \"00\";\n    culfw.Stap = 1;                 // wacht op Ack\n}\n\ncontext.set( culfw.Naam , culfw);\n\nmsg.payload = obj;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 510,
+        "y": 360,
+        "wires": [
+            [
+                "8ba39b4.14e0068",
+                "7c05564b.bcfb88"
+            ]
+        ]
+    },
+    {
+        "id": "1cda2f8d.b50b8",
+        "type": "function",
+        "z": "4eef0155.6397c",
+        "name": "Pack and Send",
+        "func": "/*  Build een bericht dat verzonden kan worden.\n\n    indien msg.sender gedefinieerd is, moet dit als verzender gebruikt worden.\n        (reset van aan ander toestel gebonden apparaat)\n        \n    msg.payload is een object met volgende properties:\n    \nmsgType - msg type raw\ndest    - destination address (3byte - 000000 for broadcast)\ngroupId - groep id\npayload - payload...\n\nZ  0E E0 05 40 17D0C0 137BFC 04 63 000000\nZs 0E 00 00 40 012345 137A0A 00 6C 000000\n\nZs0F000040012345137A0A006C000000\n\n1ste byte= lengte -> wordt hier berekend\n2de byte = msgCounter -> voorlopig 0\n3de byte flag - control byte (flag ?) -> voorlopig 0\n5de parameter = sender  - sender address (3byte) -> dit toestel, voorlopig vast.\n\n*/\n\nvar obj = msg.payload;\nvar mySelf = \"\";\nif( msg.sender === undefined || msg.sender === null){\n    mySelf = \"001122\";\n}else{\n    mySelf = msg.sender;\n}\n\n\nmsgCounter = \"00\";\nflag = \"00\";\n\nvar bericht = msgCounter + flag + obj.msgType + mySelf + obj.dest + obj.groupId + obj.payload;\n\nvar len = (bericht.length / 2 + 0).toString(16);\nif( len.length == 1 ){\n    len = \"0\"+len;\n}\n\nmsg.payload = \"Zs\"+len.toString(16).toUpperCase()+bericht.toUpperCase();\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 360,
+        "y": 260,
+        "wires": [
+            [
+                "19e8dcd9.fce143"
+            ]
+        ]
+    },
+    {
+        "id": "8ba39b4.14e0068",
+        "type": "link out",
+        "z": "4eef0155.6397c",
+        "name": "",
+        "links": [
+            "993c810.5c6668",
+            "1ffa7a9.ae20785"
+        ],
+        "x": 975,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "63c99c58.70f514",
+        "type": "function",
+        "z": "4eef0155.6397c",
+        "name": "Ack ontvangen",
+        "func": "// einde vd taken.\n\nvar culfw = msg.culfw;\nculfw.BezigMet = -1;\nculfw.Stap = -1;\ncontext.set( culfw.Naam , culfw);\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 480,
+        "y": 440,
+        "wires": [
+            [
+                "7c05564b.bcfb88"
+            ]
+        ]
+    },
+    {
+        "id": "d7de046b.5a74f8",
+        "type": "switch",
+        "z": "4eef0155.6397c",
+        "name": "Switch on culfw.Stap",
+        "property": "culfw.Stap",
+        "propertyType": "jsonata",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "-1",
+                "vt": "num"
+            },
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "num"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 220,
+        "y": 380,
+        "wires": [
+            [
+                "cdeeb387.4cd0a",
+                "9e0417a7.1447a8"
+            ],
+            [
+                "63c99c58.70f514"
+            ]
+        ]
+    },
+    {
+        "id": "c0f634ea.02f798",
+        "type": "link in",
+        "z": "4eef0155.6397c",
+        "name": "Pairing",
+        "links": [
+            "43f12c86.9dd704",
+            "86582ae8.52a6d8"
+        ],
+        "x": 75,
+        "y": 380,
+        "wires": [
+            [
+                "d7de046b.5a74f8",
+                "9e0417a7.1447a8"
+            ]
+        ]
+    },
+    {
+        "id": "c552026f.c905d",
+        "type": "tcp out",
+        "z": "4eef0155.6397c",
+        "host": "10.0.250.65",
+        "port": "2323",
+        "beserver": "client",
+        "base64": false,
+        "end": false,
+        "name": "",
+        "x": 940,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "1fe01808.73b1f8",
+        "type": "inject",
+        "z": "4eef0155.6397c",
+        "name": "send V",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "V",
+        "payloadType": "str",
+        "x": 110,
+        "y": 80,
+        "wires": [
+            [
+                "19e8dcd9.fce143"
+            ]
+        ]
+    },
+    {
+        "id": "6a839b60.f95504",
+        "type": "inject",
+        "z": "4eef0155.6397c",
+        "name": "Enable Moritz",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "Zr",
+        "payloadType": "str",
+        "x": 130,
+        "y": 120,
+        "wires": [
+            [
+                "19e8dcd9.fce143"
+            ]
+        ]
+    },
+    {
+        "id": "19e8dcd9.fce143",
+        "type": "function",
+        "z": "4eef0155.6397c",
+        "name": "add CRLF and start listening again",
+        "func": "msg.payload = msg.payload + '\\r\\nZr\\r\\n';\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 620,
+        "y": 200,
+        "wires": [
+            [
+                "c552026f.c905d"
+            ]
+        ]
+    },
+    {
+        "id": "1ffa7a9.ae20785",
+        "type": "link in",
+        "z": "4eef0155.6397c",
+        "name": "Verstuur",
+        "links": [
+            "8ba39b4.14e0068",
+            "c5b7c4c4.d86178"
+        ],
+        "x": 215,
+        "y": 260,
+        "wires": [
+            [
+                "1cda2f8d.b50b8"
+            ]
+        ]
+    },
+    {
+        "id": "7839fbe7.de2674",
+        "type": "comment",
+        "z": "4eef0155.6397c",
+        "name": "Pairing --------------------------------------------------------------------------------------------------------------------------------------------------------------------",
+        "info": "",
+        "x": 500,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "7c05564b.bcfb88",
+        "type": "debug",
+        "z": "4eef0155.6397c",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 830,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "9e0417a7.1447a8",
+        "type": "debug",
+        "z": "4eef0155.6397c",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 200,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "d74d919c.cc978",
+        "type": "comment",
+        "z": "4eef0155.6397c",
+        "name": "Set Temp --------------------------------------------------------------------------------------------------------------------------------------------------------------------",
+        "info": "",
+        "x": 500,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "77829dcc.38f5d4",
+        "type": "inject",
+        "z": "4eef0155.6397c",
+        "name": "Zet 18°",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "18",
+        "payloadType": "num",
+        "x": 130,
+        "y": 620,
+        "wires": [
+            [
+                "b741766f.080a98"
+            ]
+        ]
+    },
+    {
+        "id": "f79c0d98.676ba",
+        "type": "inject",
+        "z": "4eef0155.6397c",
+        "name": "Zet 22°",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "22",
+        "payloadType": "num",
+        "x": 130,
+        "y": 660,
+        "wires": [
+            [
+                "b741766f.080a98"
+            ]
+        ]
+    },
+    {
+        "id": "b741766f.080a98",
+        "type": "function",
+        "z": "4eef0155.6397c",
+        "name": "",
+        "func": "var temp = msg.payload;\n\n/*\nll - length\nnn - msg counter\ncc - control byte (flag ?)\ntt - msg type\nss - sender address (3byte)\ndd - destination address (3byte - 000000 for broadcast)\ngg - groep id\npp - payload...\n\nZ  0E E0 05 40 17D0C0 137BFC 04 63 000000\nZs 0E 00 00 40 012345 137A0A 00 6C 000000\n\nZs0F000040012345137A0A006C000000\n\n*/\nvar culfwNaam = \"culfw_137a0a\";\nvar culfw = context.get(culfwNaam) || {};\n\n// tijd wordt hier altijd aangepast\nculfw.LastMessage = Date.now();\nmsg.culfw = culfw;\n\n//-------------------------------------------------------\nvar bits = (0x40 | (temp*2 & 0x3F)).toString(16);\nvar extra = \"000000\";\n\nvar obj = {};\n\nobj.msgType = \"40\";             // pairpong\nobj.dest = \"137a0a\";\nobj.groupId = \"00\";\nobj.payload = bits + extra;\nculfw.Stap = 1;                 // wacht op Ack\n\nmsg.payload = obj;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 500,
+        "y": 640,
+        "wires": [
+            [
+                "c5b7c4c4.d86178",
+                "7c05564b.bcfb88"
+            ]
+        ]
+    },
+    {
+        "id": "c5b7c4c4.d86178",
+        "type": "link out",
+        "z": "4eef0155.6397c",
+        "name": "",
+        "links": [
+            "993c810.5c6668",
+            "1ffa7a9.ae20785"
+        ],
+        "x": 975,
+        "y": 640,
+        "wires": []
+    }
+]
