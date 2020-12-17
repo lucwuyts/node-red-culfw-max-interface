@@ -6,7 +6,9 @@ Message flow example for pairing a device
 
 Start pairing a basic+ thermostat.  (Push BOOST button long)
 
+<a id="pairping">
 [1. The thermostat sends this message](#pairping)
+</a>
 
 ![](images/pairing_01.png)
 
