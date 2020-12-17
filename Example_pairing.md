@@ -40,7 +40,7 @@ Result after parsing:
 
 If we didn't receive a Ack message, culfw.step would stay at 1.
 
-The device tries a few times to send a PairPing, so at the next PairPing we [start again](#1-pairping) 
+The device tries a few times to send a PairPing, so at the next PairPing we [start again](Example_pairing.md#1-pairping) 
 
 
 
