@@ -10,18 +10,20 @@
         "id": "cdeeb387.4cd0a",
         "type": "function",
         "z": "4eef0155.6397c",
-        "name": "Stuur PairPong of Reset",
-        "func": "/*  PairPing received \n\n*/\n\nvar culfw = msg.culfw;\nculfw.BezigMet = 1;\n\n// voeg de ID van het apparaat toe aan culfw\nculfw.serial = msg.payload.serial;\n\n\n\nvar obj = {};\n\n// Indien dest niet \"000000\" is, is dit apparaat nog gepaard met een ander.\n// maar ook niet onszelf\nif( msg.payload.dest != \"001122\" && msg.payload.dest != \"000000\"){\n    // RESET\n    obj.msgType = \"F0\";             // reset\n    obj.dest = msg.payload.deviceId;\n    obj.groupId = \"00\";\n    obj.payload = \"00\";\n    culfw.Stap = 1;                 // wacht op Ack\n    msg.sender = msg.payload.dest;  // verstuur dit bericht in een ander zijn naam.\n}\nelse{\n    obj.msgType = \"01\";             // pairpong\n    obj.dest = msg.payload.deviceId;\n    obj.groupId = \"00\";\n    obj.payload = \"00\";\n    culfw.Stap = 1;                 // wacht op Ack\n}\n\ncontext.set( culfw.Naam , culfw);\n\nmsg.payload = obj;\nreturn msg;",
-        "outputs": 1,
+        "name": "Send PairPong or Reset",
+        "func": "/*  PairPing received \n    sent a PairPong or Reset if paired with another DeviceId\n\n    output 1 -> send PairPong\n    output 2 -> send Reset\n    \n */\nvar config = global.get(\"culfw_config\");\n\nvar culfw = msg.culfw;\n\n// The PairPing message has an ascii id of this device\n// Add it to the culfw object\nculfw.serial = msg.payload.serial;\n\nvar msg1 = null; // pairpong output\nvar msg2 = null; // reset output\n\n// if dest != \"000000\" and not our id: this device is still paired with a different Culfw or Cube\nif( msg.payload.dest != config.DeviceId && msg.payload.dest != \"000000\"){\n    culfw.Step = 1;                 // wacht op Ack\n    \n    // sent this reset in name of someone else.\n    msg2 = {\n            sender: msg.payload.dest,  \n            dest: msg.payload.deviceId\n    };\n    \n}\nelse{\n    culfw.Step = 1;                 // wacht op Ack\n    msg1 = msg;\n}\n\n\nglobal.set( culfw.Name , culfw);\n\nreturn [msg1,msg2];",
+        "outputs": 2,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 510,
-        "y": 360,
+        "x": 490,
+        "y": 380,
         "wires": [
             [
-                "8ba39b4.14e0068",
-                "7c05564b.bcfb88"
+                "efa1f042.9b4ad"
+            ],
+            [
+                "37d04547.f7048a"
             ]
         ]
     },
@@ -30,13 +32,13 @@
         "type": "function",
         "z": "4eef0155.6397c",
         "name": "Pack and Send",
-        "func": "/*  Build een bericht dat verzonden kan worden.\n\n    indien msg.sender gedefinieerd is, moet dit als verzender gebruikt worden.\n        (reset van aan ander toestel gebonden apparaat)\n        \n    msg.payload is een object met volgende properties:\n    \nmsgType - msg type raw\ndest    - destination address (3byte - 000000 for broadcast)\ngroupId - groep id\npayload - payload...\n\nZ  0E E0 05 40 17D0C0 137BFC 04 63 000000\nZs 0E 00 00 40 012345 137A0A 00 6C 000000\n\nZs0F000040012345137A0A006C000000\n\n1ste byte= lengte -> wordt hier berekend\n2de byte = msgCounter -> voorlopig 0\n3de byte flag - control byte (flag ?) -> voorlopig 0\n5de parameter = sender  - sender address (3byte) -> dit toestel, voorlopig vast.\n\n*/\n\nvar obj = msg.payload;\nvar mySelf = \"\";\nif( msg.sender === undefined || msg.sender === null){\n    mySelf = \"001122\";\n}else{\n    mySelf = msg.sender;\n}\n\n\nmsgCounter = \"00\";\nflag = \"00\";\n\nvar bericht = msgCounter + flag + obj.msgType + mySelf + obj.dest + obj.groupId + obj.payload;\n\nvar len = (bericht.length / 2 + 0).toString(16);\nif( len.length == 1 ){\n    len = \"0\"+len;\n}\n\nmsg.payload = \"Zs\"+len.toString(16).toUpperCase()+bericht.toUpperCase();\n\nreturn msg;",
+        "func": "/*  Build een bericht dat verzonden kan worden.\n\n    indien msg.sender gedefinieerd is, moet dit als verzender gebruikt worden.\n        (reset van aan ander toestel gebonden apparaat)\n        \n    msg.payload is een object met volgende properties:\n    \nmsgType - msg type raw\ndest    - destination address (3byte - 000000 for broadcast)\ngroupId - groep id\npayload - payload...\n\nZ  0E E0 05 40 17D0C0 137BFC 04 63 000000\nZs 0E 00 00 40 012345 137A0A 00 6C 000000\n\nZs0F000040012345137A0A006C000000\n\n1ste byte= lengte -> wordt hier berekend\n2de byte = msgCounter -> voorlopig 0\n3de byte flag - control byte (flag ?) -> voorlopig 0\n5de parameter = sender  - sender address (3byte) -> dit toestel, voorlopig vast.\n\n*/\n\nvar config = global.get(\"culfw_config\");\n\nvar obj = msg.payload;\nvar mySelf = \"\";\nif( msg.sender === undefined || msg.sender === null){\n    mySelf = config.DeviceId;\n}else{\n    mySelf = msg.sender;\n}\n\n\nmsgCounter = \"00\";\nflag = \"00\";\n\nvar bericht = msgCounter + flag + obj.msgType + mySelf + obj.dest + obj.groupId + obj.payload;\n\nvar len = (bericht.length / 2 + 0).toString(16);\nif( len.length == 1 ){\n    len = \"0\"+len;\n}\n\nmsg.payload = \"Zs\"+len.toString(16).toUpperCase()+bericht.toUpperCase();\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 360,
-        "y": 260,
+        "x": 460,
+        "y": 140,
         "wires": [
             [
                 "19e8dcd9.fce143"
@@ -52,7 +54,7 @@
             "993c810.5c6668",
             "1ffa7a9.ae20785"
         ],
-        "x": 975,
+        "x": 915,
         "y": 360,
         "wires": []
     },
@@ -61,13 +63,13 @@
         "type": "function",
         "z": "4eef0155.6397c",
         "name": "Ack ontvangen",
-        "func": "// einde vd taken.\n\nvar culfw = msg.culfw;\nculfw.BezigMet = -1;\nculfw.Stap = -1;\ncontext.set( culfw.Naam , culfw);\n\nreturn msg;",
+        "func": "// einde vd taken.\n\nvar culfw = msg.culfw;\n\n// end of this action\nculfw.BusyWith = -1;    \nculfw.Step = -1;\nglobal.set( culfw.Name , culfw);\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "x": 480,
-        "y": 440,
+        "y": 460,
         "wires": [
             [
                 "7c05564b.bcfb88"
@@ -78,8 +80,8 @@
         "id": "d7de046b.5a74f8",
         "type": "switch",
         "z": "4eef0155.6397c",
-        "name": "Switch on culfw.Stap",
-        "property": "culfw.Stap",
+        "name": "Switch on culfw.Step",
+        "property": "culfw.Step",
         "propertyType": "jsonata",
         "rules": [
             {
@@ -100,8 +102,7 @@
         "y": 380,
         "wires": [
             [
-                "cdeeb387.4cd0a",
-                "9e0417a7.1447a8"
+                "cdeeb387.4cd0a"
             ],
             [
                 "63c99c58.70f514"
@@ -136,8 +137,8 @@
         "base64": false,
         "end": false,
         "name": "",
-        "x": 940,
-        "y": 200,
+        "x": 880,
+        "y": 80,
         "wires": []
     },
     {
@@ -161,8 +162,8 @@
         "topic": "",
         "payload": "V",
         "payloadType": "str",
-        "x": 110,
-        "y": 80,
+        "x": 90,
+        "y": 20,
         "wires": [
             [
                 "19e8dcd9.fce143"
@@ -190,8 +191,8 @@
         "topic": "",
         "payload": "Zr",
         "payloadType": "str",
-        "x": 130,
-        "y": 120,
+        "x": 110,
+        "y": 60,
         "wires": [
             [
                 "19e8dcd9.fce143"
@@ -203,16 +204,17 @@
         "type": "function",
         "z": "4eef0155.6397c",
         "name": "add CRLF and start listening again",
-        "func": "msg.payload = msg.payload + '\\r\\nZr\\r\\n';\nreturn msg;",
+        "func": "msg.payload = msg.payload + '\\r\\nZr\\r\\n';\nmsg._session = null;    \nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 620,
-        "y": 200,
+        "x": 580,
+        "y": 80,
         "wires": [
             [
-                "c552026f.c905d"
+                "c552026f.c905d",
+                "f8a72080.2487b"
             ]
         ]
     },
@@ -225,8 +227,8 @@
             "8ba39b4.14e0068",
             "c5b7c4c4.d86178"
         ],
-        "x": 215,
-        "y": 260,
+        "x": 75,
+        "y": 140,
         "wires": [
             [
                 "1cda2f8d.b50b8"
@@ -255,8 +257,8 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 830,
-        "y": 440,
+        "x": 870,
+        "y": 460,
         "wires": []
     },
     {
@@ -264,7 +266,7 @@
         "type": "debug",
         "z": "4eef0155.6397c",
         "name": "",
-        "active": false,
+        "active": true,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -272,8 +274,8 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 200,
-        "y": 520,
+        "x": 170,
+        "y": 420,
         "wires": []
     },
     {
@@ -372,8 +374,128 @@
             "993c810.5c6668",
             "1ffa7a9.ae20785"
         ],
-        "x": 975,
+        "x": 895,
         "y": 640,
+        "wires": []
+    },
+    {
+        "id": "efa1f042.9b4ad",
+        "type": "function",
+        "z": "4eef0155.6397c",
+        "name": "PairPong",
+        "func": "var obj = {};\n\nobj.msgType = \"01\";             // pairpong\nobj.dest = msg.payload.deviceId;\nobj.groupId = \"00\";\nobj.payload = \"00\";\n\nmsg.payload = obj;\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 700,
+        "y": 360,
+        "wires": [
+            [
+                "8ba39b4.14e0068"
+            ]
+        ]
+    },
+    {
+        "id": "50f426f4.d4c488",
+        "type": "function",
+        "z": "4eef0155.6397c",
+        "name": "Send Reset",
+        "func": "/* RESET\n\n    msg.sender = send in name of...\n    msg.dest = destination \n\n*/\nobj = {};\nobj.msgType = \"F0\";             // reset\nobj.dest = msg.dest;\nobj.sender = msg.sender;\nobj.groupId = \"00\";\nobj.payload = \"00\";\n\nmsg.payload = obj;\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 290,
+        "y": 180,
+        "wires": [
+            [
+                "1cda2f8d.b50b8"
+            ]
+        ]
+    },
+    {
+        "id": "ea5a5613.cc4ba8",
+        "type": "link in",
+        "z": "4eef0155.6397c",
+        "name": "Send Reset",
+        "links": [
+            "37d04547.f7048a"
+        ],
+        "x": 75,
+        "y": 180,
+        "wires": [
+            [
+                "50f426f4.d4c488"
+            ]
+        ]
+    },
+    {
+        "id": "37d04547.f7048a",
+        "type": "link out",
+        "z": "4eef0155.6397c",
+        "name": "",
+        "links": [
+            "ea5a5613.cc4ba8"
+        ],
+        "x": 915,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "563d0471.ae843c",
+        "type": "inject",
+        "z": "4eef0155.6397c",
+        "name": "Reset",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "sender",
+                "v": "001122",
+                "vt": "str"
+            },
+            {
+                "p": "dest",
+                "v": "137a0a",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 80,
+        "y": 240,
+        "wires": [
+            [
+                "50f426f4.d4c488"
+            ]
+        ]
+    },
+    {
+        "id": "f8a72080.2487b",
+        "type": "debug",
+        "z": "4eef0155.6397c",
+        "name": "Message to culfw controller",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 910,
+        "y": 140,
         "wires": []
     }
 ]

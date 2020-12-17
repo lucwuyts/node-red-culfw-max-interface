@@ -1,0 +1,2 @@
+# Example: Pairing a device
+

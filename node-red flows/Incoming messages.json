@@ -10,8 +10,8 @@
         "id": "74b15cb6.0ee3c4",
         "type": "debug",
         "z": "d2b21613.ad4a58",
-        "name": "",
-        "active": false,
+        "name": "Show every incomming message",
+        "active": true,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -19,8 +19,8 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 790,
-        "y": 420,
+        "x": 1000,
+        "y": 260,
         "wires": []
     },
     {
@@ -36,12 +36,11 @@
         "newline": "",
         "topic": "",
         "base64": false,
-        "x": 160,
-        "y": 420,
+        "x": 120,
+        "y": 260,
         "wires": [
             [
-                "74b15cb6.0ee3c4",
-                "888b6aa3.4bfd78"
+                "7d7e3a57.cc7734"
             ]
         ]
     },
@@ -55,8 +54,8 @@
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 540,
-        "y": 580,
+        "x": 520,
+        "y": 460,
         "wires": [
             [
                 "e513ed74.cb216",
@@ -77,8 +76,8 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 770,
-        "y": 480,
+        "x": 750,
+        "y": 360,
         "wires": []
     },
     {
@@ -91,8 +90,8 @@
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 420,
-        "y": 480,
+        "x": 400,
+        "y": 360,
         "wires": [
             [
                 "e513ed74.cb216"
@@ -112,8 +111,8 @@
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 300,
-        "y": 580,
+        "x": 280,
+        "y": 460,
         "wires": [
             [
                 "2f892c1e.2edfd4",
@@ -122,79 +121,11 @@
         ]
     },
     {
-        "id": "c7a16039.936e9",
-        "type": "inject",
-        "z": "d2b21613.ad4a58",
-        "name": "Z0C26044213D5620000000021DC",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "Z0C26044213D5620000000021DC",
-        "payloadType": "str",
-        "x": 440,
-        "y": 1680,
-        "wires": [
-            [
-                "af006ec9.a19bd"
-            ]
-        ]
-    },
-    {
-        "id": "fc43a46d.8517f8",
-        "type": "comment",
-        "z": "d2b21613.ad4a58",
-        "name": "Op basis van: ",
-        "info": "Code overgenomen uit: \n https://github.com/hobbyquaker/cul/blob/master/lib/moritz.js\nen\n https://gl.petatech.eu/root/HomeBot/-/blob/7afa28792a9ffbb35c9302fa1d174c354883f665/FHEM/14_CUL_MAX.pm",
-        "x": 130,
-        "y": 80,
-        "wires": []
-    },
-    {
-        "id": "b74e66b7.d24458",
-        "type": "inject",
-        "z": "d2b21613.ad4a58",
-        "name": "Z0F000460137BFC00000000190C2C00F0",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "Z0F000460137BFC00000000190C2C00F0",
-        "payloadType": "str",
-        "x": 460,
-        "y": 1720,
-        "wires": [
-            [
-                "af006ec9.a19bd"
-            ]
-        ]
-    },
-    {
         "id": "c7fea7e9.cfb6f8",
         "type": "debug",
         "z": "d2b21613.ad4a58",
         "name": "",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -210,7 +141,7 @@
         "id": "d11f4fd7.02d32",
         "type": "switch",
         "z": "d2b21613.ad4a58",
-        "name": "splits op msgTypeRaw",
+        "name": "switch on msgTypeRaw",
         "property": "payload.msgTypeRaw",
         "propertyType": "jsonata",
         "rules": [
@@ -273,7 +204,7 @@
         "checkall": "true",
         "repair": false,
         "outputs": 11,
-        "x": 380,
+        "x": 390,
         "y": 800,
         "wires": [
             [
@@ -340,7 +271,7 @@
         "initialize": "",
         "finalize": "",
         "x": 240,
-        "y": 480,
+        "y": 320,
         "wires": [
             [
                 "da991879.f3a6b8"
@@ -384,40 +315,11 @@
         ]
     },
     {
-        "id": "19733345.a4cf1d",
-        "type": "inject",
-        "z": "d2b21613.ad4a58",
-        "name": "PairPing",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "Z170000000FB74E0EE127001004004C455131313132363539",
-        "payloadType": "str",
-        "x": 360,
-        "y": 1760,
-        "wires": [
-            [
-                "af006ec9.a19bd"
-            ]
-        ]
-    },
-    {
         "id": "7f0f46d.2e4c6b8",
         "type": "function",
         "z": "d2b21613.ad4a58",
         "name": "00 = PairPing",
-        "func": "function hex_to_ascii(str1)\n {\n\tvar hex  = str1.toString();\n\tvar str = '';\n\tfor (var n = 0; n < hex.length; n += 2) {\n\t\tstr += String.fromCharCode(parseInt(hex.substr(n, 2), 16));\n\t}\n\treturn str;\n }\n\nvar obj = msg.payload;\nvar data = msg.payload.payload;\n\nobj.firmware = parseInt( Number(\"0x\"+data.substr(0,2)) , 10 );\nobj.deviceType = parseInt( Number(\"0x\"+data.substr(2,2)) , 10 );\nobj.testresult = parseInt( Number(\"0x\"+data.substr(4,2)) , 10 );\nobj.serial = hex_to_ascii(data.substr(6));\n\nmsg.culfw.BezigMet = 1;\n\nreturn msg;\n",
+        "func": "function hex_to_ascii(str1)\n {\n\tvar hex  = str1.toString();\n\tvar str = '';\n\tfor (var n = 0; n < hex.length; n += 2) {\n\t\tstr += String.fromCharCode(parseInt(hex.substr(n, 2), 16));\n\t}\n\treturn str;\n }\n\nvar obj = msg.payload;\nvar data = msg.payload.payload;\n\nobj.firmware = parseInt( Number(\"0x\"+data.substr(0,2)) , 10 );\nobj.deviceType = parseInt( Number(\"0x\"+data.substr(2,2)) , 10 );\nobj.testresult = parseInt( Number(\"0x\"+data.substr(4,2)) , 10 );\nobj.serial = hex_to_ascii(data.substr(6));\n\nmsg.culfw.BusyWith = 1;\nmsg.culfw.Step = -1;\n\nreturn msg;\n",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -426,37 +328,7 @@
         "y": 700,
         "wires": [
             [
-                "86582ae8.52a6d8",
-                "c7fea7e9.cfb6f8"
-            ]
-        ]
-    },
-    {
-        "id": "2e667db3.cd6322",
-        "type": "inject",
-        "z": "d2b21613.ad4a58",
-        "name": "Set Temperature",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "Z0EE0054017D0C0137BFC0463000000",
-        "payloadType": "str",
-        "x": 380,
-        "y": 1800,
-        "wires": [
-            [
-                "af006ec9.a19bd"
+                "86582ae8.52a6d8"
             ]
         ]
     },
@@ -479,35 +351,6 @@
         ]
     },
     {
-        "id": "cbc3dc99.783df",
-        "type": "inject",
-        "z": "d2b21613.ad4a58",
-        "name": "TimeInformation",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "Z0F5C050317D0C0137C0800140F56F012",
-        "payloadType": "str",
-        "x": 380,
-        "y": 1840,
-        "wires": [
-            [
-                "af006ec9.a19bd"
-            ]
-        ]
-    },
-    {
         "id": "ffede942.fdb068",
         "type": "function",
         "z": "d2b21613.ad4a58",
@@ -526,27 +369,16 @@
         ]
     },
     {
-        "id": "af006ec9.a19bd",
-        "type": "link out",
-        "z": "d2b21613.ad4a58",
-        "name": "Debug berichten UIT",
-        "links": [
-            "23385428.0b0dec"
-        ],
-        "x": 795,
-        "y": 1900,
-        "wires": []
-    },
-    {
         "id": "23385428.0b0dec",
         "type": "link in",
         "z": "d2b21613.ad4a58",
         "name": "Debug berichten IN",
         "links": [
-            "af006ec9.a19bd"
+            "af006ec9.a19bd",
+            "89e800c6.7722a"
         ],
         "x": 95,
-        "y": 540,
+        "y": 360,
         "wires": [
             [
                 "da991879.f3a6b8"
@@ -563,39 +395,10 @@
         "createDir": false,
         "overwriteFile": "false",
         "encoding": "none",
-        "x": 810,
-        "y": 340,
+        "x": 950,
+        "y": 220,
         "wires": [
             []
-        ]
-    },
-    {
-        "id": "ac53103a.485f1",
-        "type": "inject",
-        "z": "d2b21613.ad4a58",
-        "name": "PairPong",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "Z0B85000117D0C0137A0A0000",
-        "payloadType": "str",
-        "x": 360,
-        "y": 1880,
-        "wires": [
-            [
-                "af006ec9.a19bd"
-            ]
         ]
     },
     {
@@ -613,180 +416,6 @@
         "wires": [
             [
                 "c7fea7e9.cfb6f8"
-            ]
-        ]
-    },
-    {
-        "id": "4b0f94be.77857c",
-        "type": "inject",
-        "z": "d2b21613.ad4a58",
-        "name": "Ack",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "Z0E850202137A0A17D0C00001190F28",
-        "payloadType": "str",
-        "x": 350,
-        "y": 1920,
-        "wires": [
-            [
-                "af006ec9.a19bd"
-            ]
-        ]
-    },
-    {
-        "id": "abfcf9b5.d7f458",
-        "type": "inject",
-        "z": "d2b21613.ad4a58",
-        "name": "Wakeup",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "Z0BA400F117D0C0137A0A003F",
-        "payloadType": "str",
-        "x": 360,
-        "y": 1960,
-        "wires": [
-            [
-                "af006ec9.a19bd"
-            ]
-        ]
-    },
-    {
-        "id": "1a535beb.911ad4",
-        "type": "inject",
-        "z": "d2b21613.ad4a58",
-        "name": "AddLinkPartner",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "Z0E66002017D0C0137C0800137A0A01",
-        "payloadType": "str",
-        "x": 380,
-        "y": 2000,
-        "wires": [
-            [
-                "af006ec9.a19bd"
-            ]
-        ]
-    },
-    {
-        "id": "62a12515.ff931c",
-        "type": "inject",
-        "z": "d2b21613.ad4a58",
-        "name": "SetGroupId",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "Z0BA8002217D0C0137A0A0001",
-        "payloadType": "str",
-        "x": 370,
-        "y": 2040,
-        "wires": [
-            [
-                "af006ec9.a19bd"
-            ]
-        ]
-    },
-    {
-        "id": "b5107803.73f678",
-        "type": "inject",
-        "z": "d2b21613.ad4a58",
-        "name": "ConfigTemperatures",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "Z11E6001117D0C01171A7002A213D09071803",
-        "payloadType": "str",
-        "x": 390,
-        "y": 2080,
-        "wires": [
-            [
-                "af006ec9.a19bd"
-            ]
-        ]
-    },
-    {
-        "id": "397af9b2.b51f06",
-        "type": "inject",
-        "z": "d2b21613.ad4a58",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "Z11AB001117D0C0137A0A002A213D09071803",
-        "payloadType": "str",
-        "x": 350,
-        "y": 2120,
-        "wires": [
-            [
-                "af006ec9.a19bd"
             ]
         ]
     },
@@ -879,7 +508,7 @@
         "type": "comment",
         "z": "d2b21613.ad4a58",
         "name": "Werking",
-        "info": "De berichten kunnen ongevraagd toekomen, daarom wordt per device bijgehouden \nop welke stap van de communicatie het zich bevindt.\n\nIeder device dat communiceert wordt daarom opgeslagen in een afzonderlijk context object\n\nWanneer een nieuw bericht van een device toekomt, wordt de toestand bekeken.\nBij een timeout, wordt BezigMet op -1 gezet => device is free.\n\n    culfw = {\n                DeviceId: device-id\n                LastMessage: datetime,\n                BezigMet: bericht-type,\n                Stap: aktie stap\n            }\n             \n    de context variable noemt \"culfw_<deviceid>\"\n    \n    BezigMet wordt geupdate in de handler van het bericht.\n\nvanaf de functie \"Update culfw status object\" wordt het culfw object meegegeven in een msg.culfw property\n\n    BezigMet = 1 -> pairing\n        Stap -1 -> nog niet geantwoord\n        Stap 1 -> PairPong sent, waiting for Ack\n        ",
+        "info": "See also: https://github.com/lucwuyts/node-red-culfw-max-interface\n\n\nDe berichten kunnen ongevraagd toekomen, daarom wordt per device bijgehouden \nop welke stap van de communicatie het zich bevindt.\n\nIeder device dat communiceert wordt daarom opgeslagen in een afzonderlijk context object\n\nWanneer een nieuw bericht van een device toekomt, wordt de toestand bekeken.\nBij een timeout, wordt BezigMet op -1 gezet => device is free.\n\n    culfw = {\n                DeviceId: device-id\n                LastMessage: datetime,\n                BezigMet: bericht-type,\n                Stap: aktie stap\n            }\n             \n    de context variable noemt \"culfw_<deviceid>\"\n    \n    BezigMet wordt geupdate in de handler van het bericht.\n\nvanaf de functie \"Update culfw status object\" wordt het culfw object meegegeven in een msg.culfw property\n\n    BezigMet = 1 -> pairing\n        Stap -1 -> nog niet geantwoord\n        Stap 1 -> PairPong sent, waiting for Ack\n        ",
         "x": 110,
         "y": 40,
         "wires": []
@@ -889,13 +518,13 @@
         "type": "function",
         "z": "d2b21613.ad4a58",
         "name": "Update culfw status object",
-        "func": "var objIn = msg.payload;\n\nvar culfwNaam = \"culfw_\"+objIn.deviceId;\nvar culfw = context.get(culfwNaam) || {};\n\nif( culfw.LastMessage === undefined || culfw.LastMessage === null)\n{\n    culfw = {\n        Naam: culfwNaam,\n        LastMessage: Date.now(),\n        TimeOut: -1,\n        BezigMet: -1,\n        Stap: -1\n    };\n}\n\n// tijd wordt hier altijd aangepast\nculfw.LastMessage = Date.now();\n\ncontext.set(culfw.Naam,culfw);\n\nmsg.culfw = culfw;\n\nreturn msg;",
+        "func": "var objIn = msg.payload;\n\nvar emptyCulfw = {\n    Name: \"\",\n    LastMessage: 0,\n    TimeOut: -1,\n    BusyWith: -1,\n    Step: -1\n};\n    \nvar Name = \"culfw_\"+objIn.deviceId;\nvar culfw = global.get(Name) || emptyCulfw;\n\nculfw.Name = Name;\n// tijd wordt hier altijd aangepast\nculfw.LastMessage = Date.now();\n\nglobal.set(culfw.Name,culfw);\n\nmsg.culfw = culfw;\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 790,
-        "y": 580,
+        "x": 770,
+        "y": 460,
         "wires": [
             [
                 "b4a60291.ad89a",
@@ -908,7 +537,7 @@
         "type": "debug",
         "z": "d2b21613.ad4a58",
         "name": "",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -916,8 +545,8 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 1080,
-        "y": 560,
+        "x": 1060,
+        "y": 440,
         "wires": []
     },
     {
@@ -957,8 +586,8 @@
         "id": "6c5f9224.2b5d8c",
         "type": "switch",
         "z": "d2b21613.ad4a58",
-        "name": "Switch on  culfw.BezigMet",
-        "property": "culfw.BezigMet",
+        "name": "Switch on  culfw.BusyWith",
+        "property": "culfw.BusyWith",
         "propertyType": "jsonata",
         "rules": [
             {
@@ -990,5 +619,100 @@
         "x": 375,
         "y": 1140,
         "wires": []
+    },
+    {
+        "id": "57de72e.47bbd8c",
+        "type": "config",
+        "z": "d2b21613.ad4a58",
+        "name": "Config - on startup",
+        "properties": [
+            {
+                "p": "culfw_config",
+                "pt": "global",
+                "to": "{\"Name\":\"Cube1\",\"IP\":\"10.0.250.65\",\"Port\":\"2323\",\"DeviceId\":\"001122\"}",
+                "tot": "json"
+            }
+        ],
+        "active": true,
+        "x": 160,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "7ea0b291.9249dc",
+        "type": "inject",
+        "z": "d2b21613.ad4a58",
+        "name": "STOP RECEIVING",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "false",
+        "payload": "payload",
+        "payloadType": "msg",
+        "x": 130,
+        "y": 200,
+        "wires": [
+            [
+                "7d7e3a57.cc7734"
+            ]
+        ]
+    },
+    {
+        "id": "7d7e3a57.cc7734",
+        "type": "function",
+        "z": "d2b21613.ad4a58",
+        "name": "Receive ON/OFF",
+        "func": "var okToRcv = context.get(\"onoff\") ;\n\nif(msg.topic == \"false\" ){\n    okToRcv = false;\n    context.set(\"onoff\" , okToRcv )\n}\nif(msg.topic == \"true\" ){\n    okToRcv = true;\n    context.set(\"onoff\" , okToRcv )\n}\n\nif( ! okToRcv || msg.topic.length > 0 ){\n    return null;\n}\n\nmsg.topic = '';\n\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 390,
+        "y": 260,
+        "wires": [
+            [
+                "74b15cb6.0ee3c4",
+                "888b6aa3.4bfd78"
+            ]
+        ]
+    },
+    {
+        "id": "78d97cbf.0144b4",
+        "type": "inject",
+        "z": "d2b21613.ad4a58",
+        "name": "START RECEIVING",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "true",
+        "payload": "payload",
+        "payloadType": "msg",
+        "x": 140,
+        "y": 160,
+        "wires": [
+            [
+                "7d7e3a57.cc7734"
+            ]
+        ]
     }
 ]
