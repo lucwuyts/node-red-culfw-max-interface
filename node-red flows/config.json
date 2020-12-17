@@ -1,0 +1,57 @@
+[
+    {
+        "id": "240222d6.2d9b9e",
+        "type": "tab",
+        "label": "culfw Config",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "7080d502.594c4c",
+        "type": "config",
+        "z": "240222d6.2d9b9e",
+        "name": "Config - on startup",
+        "properties": [
+            {
+                "p": "culfw_config",
+                "pt": "global",
+                "to": "{\"Name\":\"Cube1\",\"IP\":\"10.0.250.65\",\"Port\":\"2323\",\"DeviceId\":\"001122\"}",
+                "tot": "json"
+            }
+        ],
+        "active": true,
+        "x": 190,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "66e8cbe1.2da474",
+        "type": "e-mail",
+        "z": "240222d6.2d9b9e",
+        "server": "smtp.scarlet.be",
+        "port": "25",
+        "secure": false,
+        "tls": false,
+        "name": "luc.wuyts@a-d-e.net",
+        "dname": "",
+        "x": 220,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "c943dfbe.8e51",
+        "type": "link in",
+        "z": "240222d6.2d9b9e",
+        "name": "Send Email",
+        "links": [
+            "46da017c.28168"
+        ],
+        "x": 75,
+        "y": 160,
+        "wires": [
+            [
+                "66e8cbe1.2da474"
+            ]
+        ]
+    }
+]

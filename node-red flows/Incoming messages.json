@@ -319,7 +319,7 @@
         "type": "function",
         "z": "d2b21613.ad4a58",
         "name": "00 = PairPing",
-        "func": "function hex_to_ascii(str1)\n {\n\tvar hex  = str1.toString();\n\tvar str = '';\n\tfor (var n = 0; n < hex.length; n += 2) {\n\t\tstr += String.fromCharCode(parseInt(hex.substr(n, 2), 16));\n\t}\n\treturn str;\n }\n\nvar obj = msg.payload;\nvar data = msg.payload.payload;\n\nobj.firmware = parseInt( Number(\"0x\"+data.substr(0,2)) , 10 );\nobj.deviceType = parseInt( Number(\"0x\"+data.substr(2,2)) , 10 );\nobj.testresult = parseInt( Number(\"0x\"+data.substr(4,2)) , 10 );\nobj.serial = hex_to_ascii(data.substr(6));\n\nmsg.culfw.BusyWith = 1;\nmsg.culfw.Step = -1;\n\nreturn msg;\n",
+        "func": "function hex_to_ascii(str1)\n {\n\tvar hex  = str1.toString();\n\tvar str = '';\n\tfor (var n = 0; n < hex.length; n += 2) {\n\t\tstr += String.fromCharCode(parseInt(hex.substr(n, 2), 16));\n\t}\n\treturn str;\n }\n\nvar device_types = {\n    \"0\" : \"Cube\",\n    \"1\" : \"HeatingThermostat\",\n    \"2\" : \"HeatingThermostatPlus\",\n    \"3\" : \"WallMountedThermostat\",\n    \"4\" : \"ShutterContact\",\n    \"5\" : \"PushButton\",\n    \"6\" : \"virtualShutterContact\",\n    \"7\" : \"virtualThermostat\",\n    \"8\" : \"PlugAdapter\",\n    \"9\" : \"new\"\n};\n\n\nvar obj = msg.payload;\nvar data = msg.payload.payload;\n\nobj.firmware = parseInt( Number(\"0x\"+data.substr(0,2)) , 10 );\nobj.deviceTypeRaw = parseInt( Number(\"0x\"+data.substr(2,2)) , 10 );\nobj.deviceType = device_types[obj.deviceTypeRaw];\nobj.testresult = parseInt( Number(\"0x\"+data.substr(4,2)) , 10 );\nobj.serial = hex_to_ascii(data.substr(6));\n\nmsg.culfw.BusyWith = 1;\nmsg.culfw.Step = -1;\n\nreturn msg;\n",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -621,24 +621,6 @@
         "wires": []
     },
     {
-        "id": "57de72e.47bbd8c",
-        "type": "config",
-        "z": "d2b21613.ad4a58",
-        "name": "Config - on startup",
-        "properties": [
-            {
-                "p": "culfw_config",
-                "pt": "global",
-                "to": "{\"Name\":\"Cube1\",\"IP\":\"10.0.250.65\",\"Port\":\"2323\",\"DeviceId\":\"001122\"}",
-                "tot": "json"
-            }
-        ],
-        "active": true,
-        "x": 160,
-        "y": 100,
-        "wires": []
-    },
-    {
         "id": "7ea0b291.9249dc",
         "type": "inject",
         "z": "d2b21613.ad4a58",
@@ -672,7 +654,7 @@
         "type": "function",
         "z": "d2b21613.ad4a58",
         "name": "Receive ON/OFF",
-        "func": "var okToRcv = context.get(\"onoff\") ;\n\nif(msg.topic == \"false\" ){\n    okToRcv = false;\n    context.set(\"onoff\" , okToRcv )\n}\nif(msg.topic == \"true\" ){\n    okToRcv = true;\n    context.set(\"onoff\" , okToRcv )\n}\n\nif( ! okToRcv || msg.topic.length > 0 ){\n    return null;\n}\n\nmsg.topic = '';\n\nreturn msg;\n",
+        "func": "var okToRcv = context.get(\"onoff\") || true;\n\nif(msg.topic == \"false\" ){\n    okToRcv = false;\n    context.set(\"onoff\" , okToRcv )\n}\nif(msg.topic == \"true\" ){\n    okToRcv = true;\n    context.set(\"onoff\" , okToRcv )\n}\n\nif( ! okToRcv || msg.topic.length > 0 ){\n    return null;\n}\n\nmsg.topic = '';\n\nreturn msg;\n",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",

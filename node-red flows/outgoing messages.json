@@ -68,11 +68,11 @@
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 480,
-        "y": 460,
+        "x": 460,
+        "y": 420,
         "wires": [
             [
-                "7c05564b.bcfb88"
+                "6ef05a26.568f54"
             ]
         ]
     },
@@ -256,8 +256,8 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 870,
-        "y": 460,
+        "x": 810,
+        "y": 700,
         "wires": []
     },
     {
@@ -540,5 +540,35 @@
                 "f83f5bb0.3a2f08"
             ]
         ]
+    },
+    {
+        "id": "6ef05a26.568f54",
+        "type": "function",
+        "z": "4eef0155.6397c",
+        "name": "Prepare email",
+        "func": "msg.payload = \"culfw device paired\"\n              + \"\\r\\nDeviceId: \"+msg.payload.deviceId\n              + \"\\r\\nType: \"+msg.payload.deviceType\n              + \"\\r\\nSerial: \"+msg.payload.serial; \nmsg.from = \"luc.wuyts@a-d-e.net\";\nmsg.topic = \"CULFW Pairing message\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 640,
+        "y": 420,
+        "wires": [
+            [
+                "46da017c.28168"
+            ]
+        ]
+    },
+    {
+        "id": "46da017c.28168",
+        "type": "link out",
+        "z": "4eef0155.6397c",
+        "name": "Send Email",
+        "links": [
+            "c943dfbe.8e51"
+        ],
+        "x": 915,
+        "y": 440,
+        "wires": []
     }
 ]
