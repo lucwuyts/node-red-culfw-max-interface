@@ -137,7 +137,7 @@
         "base64": false,
         "end": false,
         "name": "",
-        "x": 880,
+        "x": 1080,
         "y": 80,
         "wires": []
     },
@@ -213,8 +213,7 @@
         "y": 80,
         "wires": [
             [
-                "c552026f.c905d",
-                "f8a72080.2487b"
+                "f83f5bb0.3a2f08"
             ]
         ]
     },
@@ -490,12 +489,56 @@
         "tosidebar": true,
         "console": false,
         "tostatus": false,
-        "complete": "payload",
-        "targetType": "msg",
+        "complete": "true",
+        "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 910,
+        "x": 1100,
         "y": 140,
         "wires": []
+    },
+    {
+        "id": "f83f5bb0.3a2f08",
+        "type": "function",
+        "z": "4eef0155.6397c",
+        "name": "Queue",
+        "func": "// messages need to be separated from each other when sending.\n// this queue holds messages.\n//\n// if a message arrives for the same device with the same message id, \n// than an existing message, the old message is replaced with the new.\n//----------------------------------------------------------------------\nvar queue = context.get(\"queue\") || [];\n\nif( typeof(msg.payload) != 'boolean' ){\n    var obj = msg.payload;\n    var ix = -1;\n    for( i = 0 ; i < queue.length; i++){\n        var el = queue[i];\n        if( el.culfw.Name == obj.culfw.Name \n            && el.culfw.BusyWith == obj.culfw.BusyWith\n        ){\n            ix = i;\n            break;\n        }\n    }\n    if( ix >= 0){\n        queue[ix] = obj;\n    }else{\n        queue.push(obj);\n    }\n    // send empty message\n    msg = null;\n}\nelse{\n    if( queue.length > 0){\n        msg = {payload: queue.shift() };\n    }else{\n        msg = null;\n    }\n}\n\ncontext.set(\"queue\",queue);\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 870,
+        "y": 80,
+        "wires": [
+            [
+                "c552026f.c905d",
+                "f8a72080.2487b"
+            ]
+        ]
+    },
+    {
+        "id": "ec027403.a577f8",
+        "type": "inject",
+        "z": "4eef0155.6397c",
+        "name": "Queue Sending rate",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "0.2",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "true",
+        "payloadType": "bool",
+        "x": 880,
+        "y": 20,
+        "wires": [
+            [
+                "f83f5bb0.3a2f08"
+            ]
+        ]
     }
 ]
