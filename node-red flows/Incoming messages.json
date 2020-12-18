@@ -125,7 +125,7 @@
         "type": "debug",
         "z": "d2b21613.ad4a58",
         "name": "",
-        "active": false,
+        "active": true,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -537,7 +537,7 @@
         "type": "debug",
         "z": "d2b21613.ad4a58",
         "name": "",
-        "active": false,
+        "active": true,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -654,7 +654,7 @@
         "type": "function",
         "z": "d2b21613.ad4a58",
         "name": "Receive ON/OFF",
-        "func": "var okToRcv = context.get(\"onoff\") || true;\n\nif(msg.topic == \"false\" ){\n    okToRcv = false;\n    context.set(\"onoff\" , okToRcv )\n}\nif(msg.topic == \"true\" ){\n    okToRcv = true;\n    context.set(\"onoff\" , okToRcv )\n}\n\nif( ! okToRcv || msg.topic.length > 0 ){\n    return null;\n}\n\nmsg.topic = '';\n\nreturn msg;\n",
+        "func": "var okToRcv = context.get(\"onoff\");\nif( okToRcv === undefined )\n    okToRcv = true;\n\nif(msg.topic == \"false\" ){\n    okToRcv = false;\n    context.set(\"onoff\" , okToRcv )\n}\nif(msg.topic == \"true\" ){\n    okToRcv = true;\n    context.set(\"onoff\" , okToRcv )\n}\n\nif( ! okToRcv || msg.topic.length > 0 ){\n    return null;\n}\n\nmsg.topic = '';\n\nreturn msg;\n",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -694,6 +694,35 @@
         "wires": [
             [
                 "7d7e3a57.cc7734"
+            ]
+        ]
+    },
+    {
+        "id": "d4c04ee.9e064b",
+        "type": "inject",
+        "z": "d2b21613.ad4a58",
+        "name": "AddLinkPartner",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "Z0E66002017D0C0137C0800137A0A01",
+        "payloadType": "str",
+        "x": 140,
+        "y": 600,
+        "wires": [
+            [
+                "da991879.f3a6b8"
             ]
         ]
     }
