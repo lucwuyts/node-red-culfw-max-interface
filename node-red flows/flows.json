@@ -282,7 +282,7 @@
         "type": "debug",
         "z": "d2b21613.ad4a58",
         "name": "Show every incomming message",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -290,7 +290,7 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 960,
+        "x": 840,
         "y": 260,
         "wires": []
     },
@@ -320,7 +320,7 @@
         "type": "function",
         "z": "d2b21613.ad4a58",
         "name": "Parse base info",
-        "func": "// complete bericht komt hier binnen \n//\n\nvar msgId2Cmd = {\n    \t\"00\" : \"PairPing\",\n        \"01\" : \"PairPong\",\n        \"02\" : \"Ack\",\n        \"03\" : \"TimeInformation\",\n        \"10\" : \"ConfigWeekProfile\",\n        \"11\" : \"ConfigTemperatures\", //like eco/comfort etc\n        \"12\" : \"ConfigValve\",\n        \"20\" : \"AddLinkPartner\",\n        \"21\" : \"RemoveLinkPartner\",\n        \"22\" : \"SetGroupId\",\n        \"23\" : \"RemoveGroupId\",\n        \"30\" : \"ShutterContactState\",\n        \"40\" : \"SetTemperature\", //to thermostat\n        \"42\" : \"WallThermostatControl\", //by WallMountedThermostat\n        //Sending this without payload to thermostat sets desiredTemperature to the comfort/eco temperature\n        //We don't use it, we just do SetTemperature\n        \"43\" : \"SetComfortTemperature\",\n        \"44\" : \"SetEcoTemperature\",\n        \"50\" : \"PushButtonState\",\n        \"60\" : \"ThermostatState\", //by HeatingThermostat\n        \"70\" : \"WallThermostatState\",\n        \"82\" : \"SetDisplayActualTemperature\",\n        \"F1\" : \"WakeUp\",\n        \"F0\" : \"Reset\",\n};\n\n\nvar raw = msg.payload;\nvar obj = {};\n\nobj.msgCnt = raw.substr(3,2);\nobj.msgFlag = raw.substr(5,2);\nobj.msgTypeRaw = raw.substr(7,2);\nobj.msgType = msgId2Cmd[obj.msgTypeRaw] ? msgId2Cmd[obj.msgTypeRaw] : obj.msgTypeRaw;\nobj.deviceId = raw.substr(9,6).toLowerCase();\nobj.dest = raw.substr( 15,6).toLowerCase();\n\nobj.groupid = parseInt( Number(\"0x\"+raw.substr(21,2)) , 10 );\n\nobj.payload = raw.substr(23, (2*raw.length - 18));\n\n\nmsg.payload = obj;\n\nreturn msg;",
+        "func": "// complete message enters here\n//\n\nvar msgId2Cmd = {\n    \t\"00\" : \"PairPing\",\n        \"01\" : \"PairPong\",\n        \"02\" : \"Ack\",\n        \"03\" : \"TimeInformation\",\n        \"10\" : \"ConfigWeekProfile\",\n        \"11\" : \"ConfigTemperatures\", //like eco/comfort etc\n        \"12\" : \"ConfigValve\",\n        \"20\" : \"AddLinkPartner\",\n        \"21\" : \"RemoveLinkPartner\",\n        \"22\" : \"SetGroupId\",\n        \"23\" : \"RemoveGroupId\",\n        \"30\" : \"ShutterContactState\",\n        \"40\" : \"SetTemperature\", //to thermostat\n        \"42\" : \"WallThermostatControl\", //by WallMountedThermostat\n        //Sending this without payload to thermostat sets desiredTemperature to the comfort/eco temperature\n        //We don't use it, we just do SetTemperature\n        \"43\" : \"SetComfortTemperature\",\n        \"44\" : \"SetEcoTemperature\",\n        \"50\" : \"PushButtonState\",\n        \"60\" : \"ThermostatState\", //by HeatingThermostat\n        \"70\" : \"WallThermostatState\",\n        \"82\" : \"SetDisplayActualTemperature\",\n        \"F1\" : \"WakeUp\",\n        \"F0\" : \"Reset\",\n};\n\n\nvar raw = msg.payload;\nvar obj = {};\n\nobj.msgCnt = raw.substr(3,2);\nobj.msgFlag = raw.substr(5,2);\nobj.msgTypeRaw = raw.substr(7,2);\nobj.msgType = msgId2Cmd[obj.msgTypeRaw] ? msgId2Cmd[obj.msgTypeRaw] : obj.msgTypeRaw;\nobj.deviceId = raw.substr(9,6).toLowerCase();\nobj.dest = raw.substr( 15,6).toLowerCase();\n\nobj.groupid = parseInt( Number(\"0x\"+raw.substr(21,2)) , 10 );\n\nobj.payload = raw.substr(23, (2*raw.length - 18));\n\n\nmsg.payload = obj;\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -329,8 +329,7 @@
         "y": 460,
         "wires": [
             [
-                "e513ed74.cb216",
-                "234c19b3.2ffb36"
+                "98824b1.f883eb8"
             ]
         ]
     },
@@ -338,8 +337,8 @@
         "id": "e513ed74.cb216",
         "type": "debug",
         "z": "d2b21613.ad4a58",
-        "name": "",
-        "active": false,
+        "name": "Does not start with \"Z\"",
+        "active": true,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -347,8 +346,8 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 750,
-        "y": 360,
+        "x": 640,
+        "y": 340,
         "wires": []
     },
     {
@@ -386,8 +385,7 @@
         "y": 460,
         "wires": [
             [
-                "2f892c1e.2edfd4",
-                "e513ed74.cb216"
+                "2f892c1e.2edfd4"
             ]
         ]
     },
@@ -433,6 +431,11 @@
             },
             {
                 "t": "eq",
+                "v": "10",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
                 "v": "11",
                 "vt": "str"
             },
@@ -470,13 +473,16 @@
                 "t": "eq",
                 "v": "F1",
                 "vt": "str"
+            },
+            {
+                "t": "else"
             }
         ],
-        "checkall": "true",
+        "checkall": "false",
         "repair": false,
-        "outputs": 11,
+        "outputs": 13,
         "x": 370,
-        "y": 860,
+        "y": 740,
         "wires": [
             [
                 "7f0f46d.2e4c6b8"
@@ -486,6 +492,9 @@
             ],
             [
                 "ffede942.fdb068"
+            ],
+            [
+                "2bdb096f.39ffe6"
             ],
             [
                 "91ef6c3e.5418c"
@@ -510,6 +519,9 @@
             ],
             [
                 "c462c16.e1b734"
+            ],
+            [
+                "66b77563.aaf92c"
             ]
         ]
     },
@@ -523,7 +535,7 @@
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 660,
+        "x": 740,
         "y": 1020,
         "wires": [
             [
@@ -559,7 +571,7 @@
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 640,
+        "x": 720,
         "y": 1060,
         "wires": [
             [
@@ -577,7 +589,7 @@
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 650,
+        "x": 730,
         "y": 940,
         "wires": [
             [
@@ -590,13 +602,13 @@
         "type": "function",
         "z": "d2b21613.ad4a58",
         "name": "00 = PairPing",
-        "func": "function hex_to_ascii(str1)\n {\n\tvar hex  = str1.toString();\n\tvar str = '';\n\tfor (var n = 0; n < hex.length; n += 2) {\n\t\tstr += String.fromCharCode(parseInt(hex.substr(n, 2), 16));\n\t}\n\treturn str;\n }\n\nvar device_types = {\n    \"0\" : \"Cube\",\n    \"1\" : \"HeatingThermostat\",\n    \"2\" : \"HeatingThermostatPlus\",\n    \"3\" : \"WallMountedThermostat\",\n    \"4\" : \"ShutterContact\",\n    \"5\" : \"PushButton\",\n    \"6\" : \"virtualShutterContact\",\n    \"7\" : \"virtualThermostat\",\n    \"8\" : \"PlugAdapter\",\n    \"9\" : \"new\"\n};\n\n\nvar obj = msg.payload;\nvar data = msg.payload.payload;\n\nobj.firmware = parseInt( Number(\"0x\"+data.substr(0,2)) , 10 );\nobj.deviceTypeRaw = parseInt( Number(\"0x\"+data.substr(2,2)) , 10 );\nobj.deviceType = device_types[obj.deviceTypeRaw];\nobj.testresult = parseInt( Number(\"0x\"+data.substr(4,2)) , 10 );\nobj.serial = hex_to_ascii(data.substr(6));\n\nmsg.culfw.BusyWith = 1;\nmsg.culfw.Step = -1;\n\nreturn msg;\n",
+        "func": "function hex_to_ascii(str1)\n {\n\tvar hex  = str1.toString();\n\tvar str = '';\n\tfor (var n = 0; n < hex.length; n += 2) {\n\t\tstr += String.fromCharCode(parseInt(hex.substr(n, 2), 16));\n\t}\n\treturn str;\n }\n\nvar device_types = {\n    \"0\" : \"Cube\",\n    \"1\" : \"HeatingThermostat\",\n    \"2\" : \"HeatingThermostatPlus\",\n    \"3\" : \"WallMountedThermostat\",\n    \"4\" : \"ShutterContact\",\n    \"5\" : \"PushButton\",\n    \"6\" : \"virtualShutterContact\",\n    \"7\" : \"virtualThermostat\",\n    \"8\" : \"PlugAdapter\",\n    \"9\" : \"new\"\n};\n\n\nvar obj = msg.payload;\nvar data = msg.payload.payload;\n\nobj.firmware = parseInt( Number(\"0x\"+data.substr(0,2)) , 10 );\nobj.deviceTypeRaw = parseInt( Number(\"0x\"+data.substr(2,2)) , 10 );\nobj.deviceType = device_types[obj.deviceTypeRaw];\nobj.testresult = parseInt( Number(\"0x\"+data.substr(4,2)) , 10 );\nobj.serial = hex_to_ascii(data.substr(6));\n\n//save deviceType and serial\nmsg.culfw.deviceType = obj.deviceType;\nmsg.culfw.serial = obj.serial;\n\nvar Name = msg.culfw.Name;\nglobal.set(Name,msg.culfw);\n\nmsg.culfw.BusyWith = 1;\nmsg.culfw.Step = -1;\n\nreturn msg;\n",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 620,
-        "y": 700,
+        "x": 700,
+        "y": 620,
         "wires": [
             [
                 "86582ae8.52a6d8"
@@ -613,7 +625,7 @@
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 640,
+        "x": 720,
         "y": 980,
         "wires": [
             [
@@ -631,8 +643,8 @@
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 640,
-        "y": 780,
+        "x": 720,
+        "y": 700,
         "wires": [
             [
                 "c7fea7e9.cfb6f8"
@@ -660,14 +672,14 @@
         "id": "66b77563.aaf92c",
         "type": "file",
         "z": "d2b21613.ad4a58",
-        "name": "Log to c:\\1\\log.txt",
-        "filename": "c:\\1\\log.txt",
+        "name": "Log to c:\\1\\Unknown Message.txt",
+        "filename": "c:\\1\\Unknown Message.txt",
         "appendNewline": true,
         "createDir": false,
         "overwriteFile": "false",
         "encoding": "none",
-        "x": 950,
-        "y": 220,
+        "x": 340,
+        "y": 900,
         "wires": [
             []
         ]
@@ -682,8 +694,8 @@
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 620,
-        "y": 740,
+        "x": 700,
+        "y": 660,
         "wires": [
             [
                 "c7fea7e9.cfb6f8"
@@ -700,7 +712,7 @@
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 650,
+        "x": 730,
         "y": 820,
         "wires": [
             [
@@ -718,7 +730,7 @@
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 640,
+        "x": 720,
         "y": 860,
         "wires": [
             [
@@ -736,7 +748,7 @@
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 620,
+        "x": 700,
         "y": 1100,
         "wires": [
             [
@@ -754,7 +766,7 @@
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 620,
+        "x": 700,
         "y": 900,
         "wires": [
             [
@@ -771,8 +783,8 @@
             "c0f634ea.02f798",
             "d9af8067.5cce9"
         ],
-        "x": 795,
-        "y": 700,
+        "x": 875,
+        "y": 620,
         "wires": []
     },
     {
@@ -790,13 +802,13 @@
         "type": "function",
         "z": "d2b21613.ad4a58",
         "name": "Update culfw status object",
-        "func": "var objIn = msg.payload;\n\nvar emptyCulfw = {\n    Name: \"\",\n    LastMessage: 0,\n    TimeOut: -1,\n    BusyWith: -1,\n    Step: -1\n};\n    \nvar Name = \"culfw_\"+objIn.deviceId;\nvar culfw = global.get(Name) || emptyCulfw;\n\nculfw.Name = Name;\n// tijd wordt hier altijd aangepast\nculfw.LastMessage = Date.now();\n\nglobal.set(culfw.Name,culfw);\n\nmsg.culfw = culfw;\n\nreturn msg;",
+        "func": "var objIn = msg.payload;\n\nvar emptyCulfw = {\n    Name: \"\",\n    LastMessage: 0,\n    TimeOut: -1,\n    BusyWith: -1,\n    Step: -1\n};\n    \nvar Name = \"culfw_\"+objIn.deviceId;\nvar culfw = global.get(Name) || emptyCulfw;\n\nculfw.Name = Name;\nculfw.LastMessage = Date.now();     // time of last message\n\n// properties added later during development.\nif( !culfw.hasOwnProperty('deviceType') ){\n    culfw.deviceType = '';\n}\nif( !culfw.hasOwnProperty('serial') ){\n    culfw.serial = '';\n}\n\nglobal.set(culfw.Name,culfw);\n\nmsg.culfw = culfw;\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 770,
-        "y": 460,
+        "x": 190,
+        "y": 520,
         "wires": [
             [
                 "b4a60291.ad89a",
@@ -809,7 +821,7 @@
         "type": "debug",
         "z": "d2b21613.ad4a58",
         "name": "",
-        "active": false,
+        "active": true,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -817,8 +829,8 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 1060,
-        "y": 440,
+        "x": 510,
+        "y": 560,
         "wires": []
     },
     {
@@ -844,7 +856,7 @@
         "repair": false,
         "outputs": 2,
         "x": 130,
-        "y": 780,
+        "y": 660,
         "wires": [
             [
                 "d11f4fd7.02d32"
@@ -914,7 +926,8 @@
                 "efa1f042.9b4ad"
             ],
             [
-                "37d04547.f7048a"
+                "37d04547.f7048a",
+                "aa7b1a6d.f726c8"
             ]
         ]
     },
@@ -993,7 +1006,8 @@
         "y": 380,
         "wires": [
             [
-                "cdeeb387.4cd0a"
+                "cdeeb387.4cd0a",
+                "beb3b8af.473358"
             ],
             [
                 "63c99c58.70f514"
@@ -1077,12 +1091,12 @@
         ],
         "repeat": "",
         "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
+        "once": true,
+        "onceDelay": "0.5",
         "topic": "",
         "payload": "Zr",
         "payloadType": "str",
-        "x": 110,
+        "x": 120,
         "y": 60,
         "wires": [
             [
@@ -1619,10 +1633,10 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
-        "payload": "Z11AB001117D0C0137A0A002A213D09071803",
+        "payload": "Z0AB000F017D0C0124C8200",
         "payloadType": "str",
-        "x": 170,
-        "y": 540,
+        "x": 250,
+        "y": 580,
         "wires": [
             [
                 "89e800c6.7722a"
@@ -1673,7 +1687,8 @@
         "wires": [
             [
                 "74b15cb6.0ee3c4",
-                "888b6aa3.4bfd78"
+                "888b6aa3.4bfd78",
+                "a3604b1d.97a938"
             ]
         ]
     },
@@ -1840,8 +1855,8 @@
         "y": 80,
         "wires": [
             [
-                "c552026f.c905d",
-                "f8a72080.2487b"
+                "f8a72080.2487b",
+                "c552026f.c905d"
             ]
         ]
     },
@@ -1875,7 +1890,7 @@
         "type": "function",
         "z": "4eef0155.6397c",
         "name": "Prepare email",
-        "func": "msg.payload = \"culfw device paired\"\n              + \"\\r\\nDeviceId: \"+msg.payload.deviceId\n              + \"\\r\\nType: \"+msg.payload.deviceType\n              + \"\\r\\nSerial: \"+msg.payload.serial; \nmsg.from = \"luc.wuyts@a-d-e.net\";\nmsg.topic = \"CULFW Pairing message\";\nreturn msg;",
+        "func": "msg.payload = \"culfw device paired\"\n              + \"\\r\\nDeviceId: \"+msg.payload.deviceId\n              + \"\\r\\nType: \"+msg.culfw.deviceType\n              + \"\\r\\nSerial: \"+msg.culfw.serial; \nmsg.from = \"luc.wuyts@a-d-e.net\";\nmsg.topic = \"CULFW Pairing message\";\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -2149,31 +2164,86 @@
         ]
     },
     {
-        "id": "8a9bc24f.28ea8",
-        "type": "inject",
-        "z": "1119b2.abf3964e",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "Z0E0000200011220FB74E00137A0A01",
-        "payloadType": "str",
-        "x": 170,
-        "y": 580,
+        "id": "98824b1.f883eb8",
+        "type": "function",
+        "z": "d2b21613.ad4a58",
+        "name": "Debug Filtering",
+        "func": "/* when filterOn, incoming messages with only specific addresses will pass.\n   (deviceId or dest)\n */\n\nvar filterOn = true;\n\nif( filterOn ){\n    // array with allowed addresses.\n    //var addr = [\"137a0a\" , \"124c82\"];\n    var addr = [\"124c82\"];\n    var objIn = msg.payload;\n    \n    var letpass = false;\n    for( i = 0; i < addr.length; i++){\n        var adr = addr[i];\n        if( objIn.dest === adr || objIn.deviceId === adr ){\n            letpass = true;\n            break;\n        }\n    }\n    \n    if( !letpass ){\n        return null;\n    }\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 760,
+        "y": 460,
         "wires": [
             [
-                "89e800c6.7722a"
+                "234c19b3.2ffb36"
+            ]
+        ]
+    },
+    {
+        "id": "aa7b1a6d.f726c8",
+        "type": "debug",
+        "z": "4eef0155.6397c",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1050,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "beb3b8af.473358",
+        "type": "debug",
+        "z": "4eef0155.6397c",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 480,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "a3604b1d.97a938",
+        "type": "file",
+        "z": "d2b21613.ad4a58",
+        "name": "Log to c:\\1\\c:\\1\\All Messages.txt",
+        "filename": "c:\\1\\All Messages.txt",
+        "appendNewline": true,
+        "createDir": false,
+        "overwriteFile": "false",
+        "encoding": "none",
+        "x": 830,
+        "y": 220,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "2bdb096f.39ffe6",
+        "type": "function",
+        "z": "d2b21613.ad4a58",
+        "name": "10 = ConfigWeekProfile",
+        "func": "\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 730,
+        "y": 740,
+        "wires": [
+            [
+                "c7fea7e9.cfb6f8"
             ]
         ]
     }

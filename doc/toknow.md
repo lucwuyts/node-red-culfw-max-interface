@@ -26,3 +26,7 @@ At this time, only the parameter DeviceId is used.
 ![](images/05.png)
 
 
+During testing, i added a message filter. If it still is on in the flow, you can switch this off by changing the filterflag in the source.
+
+I added a function to save unknown messages. You can remove this, or change the file to you liking.
+ 
