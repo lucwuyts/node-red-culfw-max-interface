@@ -530,7 +530,7 @@
         "type": "function",
         "z": "d2b21613.ad4a58",
         "name": "42 = WallThermostatControl",
-        "func": "var data = msg.payload.payload;\n\nvar hexStr = \"0x\"+data.substr(0,2);\nvar tmp = parseInt( Number(hexStr) , 10 );\nmsg.payload.desiredTemperatureRaw = tmp;\n\nhexStr = \"0x\"+data.substr(2,2);\ntmp = parseInt( Number(hexStr) , 10 );\nmsg.payload.measuredTemperature = tmp;\n\nreturn msg;",
+        "func": "var data = msg.payload.payload;\n\nvar hexStr = \"0x\"+data.substr(0,2);\nvar tmp = parseInt( Number(hexStr) , 10 );\n// msg.payload.desiredTemperatureRaw = tmp;\nmsg.payload.desiredTemp = tmp / 2;\n\nhexStr = \"0x\"+data.substr(2,2);\ntmp = parseInt( Number(hexStr) , 10 );\nmsg.payload.measuredTemp = tmp / 10;\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -638,7 +638,7 @@
         "type": "function",
         "z": "d2b21613.ad4a58",
         "name": "03 = Time Information",
-        "func": "var obj = msg.payload;\nvar data = obj.payload;\n\nobj.year = 2000+ (\"0x\"+data.substr(0,2))*1;\nobj.day =  (\"0x\"+data.substr(2,2))*1;\nobj.hour =  ((\"0x\"+data.substr(4,2))*1 ) & 0x1F;\nobj.min =  ((\"0x\"+data.substr(6,2))*1) & 0x3F;\nobj.sec = ((\"0x\"+data.substr(8,2))*1) & 0x3F;\nobj.month = ((((\"0x\"+data.substr(6,2))*1) >> 6) << 2) | (((\"0x\"+data.substr(8,2))*1) >> 6); // this is just guessed according to FHEM\nobj.unk1 = ((\"0x\"+data.substr(4,2))*1 ) >> 5;\nobj.unk2 = ((\"0x\"+data.substr(6,2))*1 ) >> 6;\nobj.unk3 = ((\"0x\"+data.substr(8,2))*1 ) >> 6;\n\nreturn msg;",
+        "func": "// Z 0FA50003 17D0C0 124C82 \n//     payload = 0014134AD420\n\nvar obj = msg.payload;\nvar data = obj.payload;\n\nobj.year = 2000+ (\"0x\"+data.substr(0,2))*1;\nobj.day =  (\"0x\"+data.substr(2,2))*1;\nobj.hour =  ((\"0x\"+data.substr(4,2))*1 ) & 0x1F;\nobj.min =  ((\"0x\"+data.substr(6,2))*1) & 0x3F;\nobj.sec = ((\"0x\"+data.substr(8,2))*1) & 0x3F;\nobj.month = ((((\"0x\"+data.substr(6,2))*1) >> 6) << 2) | (((\"0x\"+data.substr(8,2))*1) >> 6); // this is just guessed according to FHEM\n\n// unknown\nobj.unk1 = ((\"0x\"+data.substr(4,2))*1 ) >> 5;\nobj.unk2 = ((\"0x\"+data.substr(6,2))*1 ) >> 6;\nobj.unk3 = ((\"0x\"+data.substr(8,2))*1 ) >> 6;\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -821,7 +821,7 @@
         "type": "debug",
         "z": "d2b21613.ad4a58",
         "name": "",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -1130,7 +1130,8 @@
         "links": [
             "8ba39b4.14e0068",
             "c5b7c4c4.d86178",
-            "90d05cae.a011f"
+            "90d05cae.a011f",
+            "524ac550.271bbc"
         ],
         "x": 75,
         "y": 140,
@@ -1162,8 +1163,8 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 810,
-        "y": 700,
+        "x": 770,
+        "y": 720,
         "wires": []
     },
     {
@@ -1517,7 +1518,7 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
-        "payload": "Z0BA400F117D0C0137A0A003F",
+        "payload": "Z0BA400F117D0C0124C82003F",
         "payloadType": "str",
         "x": 180,
         "y": 380,
@@ -1608,35 +1609,6 @@
         "payloadType": "str",
         "x": 210,
         "y": 500,
-        "wires": [
-            [
-                "89e800c6.7722a"
-            ]
-        ]
-    },
-    {
-        "id": "8d4765c8.02e048",
-        "type": "inject",
-        "z": "1119b2.abf3964e",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "Z0AB000F017D0C0124C8200",
-        "payloadType": "str",
-        "x": 250,
-        "y": 580,
         "wires": [
             [
                 "89e800c6.7722a"
@@ -1967,9 +1939,9 @@
         "id": "2ae31786.0670d8",
         "type": "comment",
         "z": "4eef0155.6397c",
-        "name": "AddLinkPartner --------------------------------------------------------------------------------------------------------------------------------------------------------------------",
+        "name": "Send Time  --------------------------------------------------------------------------------------------------------------------------------------------------------------------",
         "info": "",
-        "x": 520,
+        "x": 510,
         "y": 780,
         "wires": []
     },
@@ -1983,8 +1955,8 @@
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 520,
-        "y": 840,
+        "x": 540,
+        "y": 1100,
         "wires": [
             [
                 "90d05cae.a011f",
@@ -2000,8 +1972,8 @@
         "links": [
             "1ffa7a9.ae20785"
         ],
-        "x": 895,
-        "y": 840,
+        "x": 915,
+        "y": 1100,
         "wires": []
     },
     {
@@ -2026,8 +1998,8 @@
         "checkall": "true",
         "repair": false,
         "outputs": 2,
-        "x": 240,
-        "y": 880,
+        "x": 260,
+        "y": 1140,
         "wires": [
             [
                 "80ff219b.951ea"
@@ -2047,8 +2019,8 @@
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 490,
-        "y": 880,
+        "x": 510,
+        "y": 1140,
         "wires": [
             []
         ]
@@ -2059,8 +2031,8 @@
         "z": "4eef0155.6397c",
         "name": "",
         "links": [],
-        "x": 75,
-        "y": 880,
+        "x": 95,
+        "y": 1140,
         "wires": [
             [
                 "f4618df3.42eec"
@@ -2076,8 +2048,8 @@
             "4d664945.c17fc8",
             "fbba06a9.339938"
         ],
-        "x": 75,
-        "y": 840,
+        "x": 95,
+        "y": 1100,
         "wires": [
             [
                 "80ff219b.951ea"
@@ -2125,8 +2097,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 160,
-        "y": 980,
+        "x": 180,
+        "y": 1240,
         "wires": [
             [
                 "c1902911.7c6808"
@@ -2141,8 +2113,8 @@
         "links": [
             "d781c4f.3efad38"
         ],
-        "x": 615,
-        "y": 980,
+        "x": 635,
+        "y": 1240,
         "wires": []
     },
     {
@@ -2155,8 +2127,8 @@
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 380,
-        "y": 980,
+        "x": 400,
+        "y": 1240,
         "wires": [
             [
                 "fbba06a9.339938"
@@ -2244,6 +2216,106 @@
         "wires": [
             [
                 "c7fea7e9.cfb6f8"
+            ]
+        ]
+    },
+    {
+        "id": "c233758b.5af6a8",
+        "type": "comment",
+        "z": "4eef0155.6397c",
+        "name": "AddLinkPartner --------------------------------------------------------------------------------------------------------------------------------------------------------------------",
+        "info": "",
+        "x": 520,
+        "y": 1040,
+        "wires": []
+    },
+    {
+        "id": "fcc9747c.b742e8",
+        "type": "function",
+        "z": "4eef0155.6397c",
+        "name": "Send Time",
+        "func": "/* msg.payload = {\n    'dest': 'xxxxxx',           // send the time to this address\n   }\n\n*/\n\nfunction Byte2Hex( b ){\n    var hex = (b + 0).toString(16);\n    if( hex.length == 1 ){\n        hex = \"0\"+hex;\n    }\n    return hex;\n}\n\n\nvar obj = {};\nobj.msgType = \"03\";             // TimeInformation\nobj.dest = msg.payload.dest;\nobj.groupId = \"00\";\n\nvar date = new Date();\nvar hh = date.getHours();\nvar mm = date.getMinutes();\nvar ss = date.getSeconds();\nvar YY = date.getFullYear()-2000;\nvar MM = date.getMonth();\nvar dd = date.getDate();\n\n// minutes shares byte with month\nvar bTmp1 = mm + ((MM & 0xC)<<4);\n\n// seconds shares byte with month\nvar bTmp2 = ss + ((MM & 0x3)<<6);\n\nobj.payload = Byte2Hex(YY)+Byte2Hex(dd)+Byte2Hex(hh)+Byte2Hex(bTmp1)+Byte2Hex(bTmp2);\n\n\nmsg.payload = obj;\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 470,
+        "y": 840,
+        "wires": [
+            [
+                "524ac550.271bbc",
+                "7c05564b.bcfb88"
+            ]
+        ]
+    },
+    {
+        "id": "524ac550.271bbc",
+        "type": "link out",
+        "z": "4eef0155.6397c",
+        "name": "",
+        "links": [
+            "993c810.5c6668",
+            "1ffa7a9.ae20785"
+        ],
+        "x": 895,
+        "y": 840,
+        "wires": []
+    },
+    {
+        "id": "d68e65c5.dc7068",
+        "type": "inject",
+        "z": "4eef0155.6397c",
+        "name": "Send Time to WallThermostat   124c82",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"dest\":\"124c82\"}",
+        "payloadType": "json",
+        "x": 210,
+        "y": 840,
+        "wires": [
+            [
+                "fcc9747c.b742e8"
+            ]
+        ]
+    },
+    {
+        "id": "c67728a8.5a03a8",
+        "type": "inject",
+        "z": "1119b2.abf3964e",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "Z0F000003001122124C8200141312A4DE",
+        "payloadType": "str",
+        "x": 160,
+        "y": 560,
+        "wires": [
+            [
+                "89e800c6.7722a"
             ]
         ]
     }
