@@ -1,4 +1,4 @@
-[Goto Readme](README.md)
+[Goto Readme](/README.md)
 
 # Example: Pairing a device
 
