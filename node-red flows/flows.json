@@ -1,5 +1,12 @@
 [
     {
+        "id": "1119b2.abf3964e",
+        "type": "tab",
+        "label": "culfw messages for testing",
+        "disabled": false,
+        "info": ""
+    },
+    {
         "id": "240222d6.2d9b9e",
         "type": "tab",
         "label": "culfw Config",
@@ -21,9 +28,9 @@
         "info": ""
     },
     {
-        "id": "1119b2.abf3964e",
+        "id": "27628eec.90fe82",
         "type": "tab",
-        "label": "culfw messages for testing",
+        "label": "culfw Div",
         "disabled": false,
         "info": ""
     },
@@ -282,7 +289,7 @@
         "type": "debug",
         "z": "d2b21613.ad4a58",
         "name": "Show every incomming message",
-        "active": false,
+        "active": true,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -320,13 +327,13 @@
         "type": "function",
         "z": "d2b21613.ad4a58",
         "name": "Parse base info",
-        "func": "// complete message enters here\n//\n\nvar msgId2Cmd = {\n    \t\"00\" : \"PairPing\",\n        \"01\" : \"PairPong\",\n        \"02\" : \"Ack\",\n        \"03\" : \"TimeInformation\",\n        \"10\" : \"ConfigWeekProfile\",\n        \"11\" : \"ConfigTemperatures\", //like eco/comfort etc\n        \"12\" : \"ConfigValve\",\n        \"20\" : \"AddLinkPartner\",\n        \"21\" : \"RemoveLinkPartner\",\n        \"22\" : \"SetGroupId\",\n        \"23\" : \"RemoveGroupId\",\n        \"30\" : \"ShutterContactState\",\n        \"40\" : \"SetTemperature\", //to thermostat\n        \"42\" : \"WallThermostatControl\", //by WallMountedThermostat\n        //Sending this without payload to thermostat sets desiredTemperature to the comfort/eco temperature\n        //We don't use it, we just do SetTemperature\n        \"43\" : \"SetComfortTemperature\",\n        \"44\" : \"SetEcoTemperature\",\n        \"50\" : \"PushButtonState\",\n        \"60\" : \"ThermostatState\", //by HeatingThermostat\n        \"70\" : \"WallThermostatState\",\n        \"82\" : \"SetDisplayActualTemperature\",\n        \"F1\" : \"WakeUp\",\n        \"F0\" : \"Reset\",\n};\n\n\nvar raw = msg.payload;\nvar obj = {};\n\nobj.msgCnt = raw.substr(3,2);\nobj.msgFlag = raw.substr(5,2);\nobj.msgTypeRaw = raw.substr(7,2);\nobj.msgType = msgId2Cmd[obj.msgTypeRaw] ? msgId2Cmd[obj.msgTypeRaw] : obj.msgTypeRaw;\nobj.deviceId = raw.substr(9,6).toLowerCase();\nobj.dest = raw.substr( 15,6).toLowerCase();\n\nobj.groupid = parseInt( Number(\"0x\"+raw.substr(21,2)) , 10 );\n\nobj.payload = raw.substr(23, (2*raw.length - 18));\n\n\nmsg.payload = obj;\n\nreturn msg;",
+        "func": "// complete message enters here\n//\n\nvar raw = msg.payload;\nvar obj = {};\n\nobj.msgCnt = raw.substr(3,2);\nobj.msgFlag = raw.substr(5,2);\nobj.msgTypeRaw = raw.substr(7,2);\nvar cmd = global.get('msgId2Cmd','memoryOnly')(obj.msgTypeRaw);\nobj.msgType = cmd ? cmd : obj.msgTypeRaw;\nobj.src = raw.substr(9,6).toLowerCase();\nobj.dst = raw.substr( 15,6).toLowerCase();\n\nobj.groupid = global.get('parseAsHex','memoryOnly')(raw,21,2);\n\n\nvar lenNoRSSI = global.get('get_messageLength','memoryOnly')(obj.msgTypeRaw);\nif( lenNoRSSI != 0 && raw.length > lenNoRSSI ){\n    // laatste 2 karakters = rssi\n    var rssi = Number.parseInt(raw.slice(-2), 16);\n    obj.rssi = (rssi >= 128 ? (((rssi - 256) / 2) - 74) : ((rssi / 2) - 74));\n    // strip off RSSI info\n    raw = raw.substr(0,lenNoRSSI);\n}\nelse{\n    obj.rssi = null;\n}\n\nobj.payload = raw.substr(23, (2*raw.length - 18));\n\n\nmsg.payload = obj;\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "x": 520,
-        "y": 460,
+        "y": 420,
         "wires": [
             [
                 "98824b1.f883eb8"
@@ -338,7 +345,7 @@
         "type": "debug",
         "z": "d2b21613.ad4a58",
         "name": "Does not start with \"Z\"",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -375,17 +382,20 @@
         "id": "5a043514.1e126c",
         "type": "function",
         "z": "d2b21613.ad4a58",
-        "name": "Controle lengte",
-        "func": "var raw = msg.payload;\n\nvar hexStr = \"0x\"+raw.substr(1,2);\nvar len = parseInt( Number(hexStr) , 10 );\nif( len*2 + 3 != raw.length){\n    msg.payload = 'error lengte '+raw.length + \"  \" + len;\n}\n\n\n\nreturn msg;",
-        "outputs": 1,
+        "name": "Verify length",
+        "func": "// verify message length\n// 2 checks -> with and without RSSI\nvar msg2 = null;\nvar raw = msg.payload;\n\nvar hexStr = \"0x\"+raw.substr(1,2);\nvar len = parseInt( Number(hexStr) , 10 );\nvar totalLen = len*2 + 3;\n\nif( ! (totalLen == raw.length || totalLen + 2 == raw.length) ){\n    msg2 ={ payload: raw +'\\r\\nerror lengte '+raw.length + \" - verwacht: \" + len +\"(+ 2 RSSI)\"};\n}\n\nreturn [msg,msg2];",
+        "outputs": 2,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 280,
-        "y": 460,
+        "x": 270,
+        "y": 440,
         "wires": [
             [
                 "2f892c1e.2edfd4"
+            ],
+            [
+                "4fb2e47e.2691ac"
             ]
         ]
     },
@@ -471,6 +481,11 @@
             },
             {
                 "t": "eq",
+                "v": "70",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
                 "v": "F1",
                 "vt": "str"
             },
@@ -480,7 +495,7 @@
         ],
         "checkall": "false",
         "repair": false,
-        "outputs": 13,
+        "outputs": 14,
         "x": 370,
         "y": 740,
         "wires": [
@@ -518,6 +533,9 @@
                 "2df3b610.a611da"
             ],
             [
+                "5437156b.65840c"
+            ],
+            [
                 "c462c16.e1b734"
             ],
             [
@@ -530,13 +548,13 @@
         "type": "function",
         "z": "d2b21613.ad4a58",
         "name": "42 = WallThermostatControl",
-        "func": "var data = msg.payload.payload;\n\nvar hexStr = \"0x\"+data.substr(0,2);\nvar tmp = parseInt( Number(hexStr) , 10 );\n// msg.payload.desiredTemperatureRaw = tmp;\nmsg.payload.desiredTemp = tmp / 2;\n\nhexStr = \"0x\"+data.substr(2,2);\ntmp = parseInt( Number(hexStr) , 10 );\nmsg.payload.measuredTemp = tmp / 10;\n\nreturn msg;",
+        "func": "// Z0CFF0442124C8200000000  A208\n\nvar data = msg.payload.payload;\n\nmsg.payload.desiredTemp = global.get('parseAsHex','memoryonly')(data,0,2) / 2;\nmsg.payload.measuredTemp = global.get('parseAsHex','memoryonly')(data,2,2) / 10;\n\nreturn msg;\n\n",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "x": 740,
-        "y": 1020,
+        "y": 980,
         "wires": [
             [
                 "c7fea7e9.cfb6f8"
@@ -566,13 +584,13 @@
         "type": "function",
         "z": "d2b21613.ad4a58",
         "name": "60 = ThermostatState",
-        "func": "function getBits(value, offset, len) {\n        var mask = 0;\n        while (len > 0) {\n                mask = mask << 1;\n                mask++;\n                len--;\n        }\n        return ((value >> offset) & mask);\n}\n\nfunction MAX_ParseDateTime(byte1, byte2, byte3) {\n\tvar result = {};\n\tresult.day = byte1 & 0x1F;\n\tresult.month = ((byte1 & 0xE0) >> 4) | (byte2 >> 7);\n\tresult.year = byte2 & 0x3F;\n\tvar time = byte3 & 0x3F;\n\tif ((time % 2) > 0)\n\t\tresult.time = (time / 2) + \":30\";\n\telse\n\t\tresult.time = (time / 2) + \":00\";\n\n\tresult.str = result.day+\".\"+result.month+\".\"+result.year+\" \"+result.time;\n\treturn result;\n}\n\nvar ctrl_modes = { \n\t'0' : \"auto\",\n\t'1' : \"manual\",\n\t'2' : \"temporary\",\n\t'3' : \"boost\",\n}; \n\nvar obj = msg.payload;\nvar data = msg.payload.payload;\n\nvar bits2 = parseInt( Number(\"0x\"+data.substr(0,2)) , 10 );\n\nobj.valveposition = parseInt( Number(\"0x\"+data.substr(2,2)) , 10 );\nobj.desiredTemperatureRaw = parseInt( Number(\"0x\"+data.substr(4,2)) , 10 );\n\nvar until1 = parseInt( Number(\"0x\"+data.substr(6,2)) , 10 );\nvar until2 = parseInt( Number(\"0x\"+data.substr(8,2)) , 10 );\nvar until3 = parseInt( Number(\"0x\"+data.substr(10,2)) , 10 );\n\nobj.mode = getBits(bits2, 0, 2);\nobj.modeStr = ctrl_modes[obj.mode] ? ctrl_modes[obj.mode] : obj.mode;\nobj.dstsetting = getBits(bits2, 3, 1); //is automatically switching to DST activated\nobj.langateway = getBits(bits2, 4, 1); //??\nobj.panel = getBits(bits2, 5, 1); //1 if the heating thermostat is locked for manually setting the temperature at the device\nobj.rferror = getBits(bits2, 6, 1); //communication with link partner (what does that mean?)\nobj.batterylow = getBits(bits2, 7, 1); //1 if battery is low\nobj.battery = obj.batterylow ? \"low\" : \"ok\";\n\nif (until3 > 0) data.untilStr = MAX_ParseDateTime(until1, until2, until3);\nobj.measuredTemperature = (until2 > 0) ? (((until1 & 0x01)<<8) + until2) : 0;\n//If the control mode is not \"temporary\", the cube sends the current (measured) temperature\nif ((obj.mode == 2) || (obj.measuredTemperature == 0)) obj.measuredTemperature = null;\nif (obj.mode != 2) delete obj.untilStr;\n\n\n\nreturn msg;",
+        "func": "var obj = msg.payload;\nvar data = msg.payload.payload;\n\nvar bits2 = global.get('parseAsHex','memoryonly')(data,0,2);\n\nobj.valveposition = global.get('parseAsHex','memoryonly')(data,2,2);\nobj.desiredTemp = global.get('parseAsHex','memoryonly')(data,4,2) / 2;\n\nvar until1 = global.get('parseAsHex','memoryonly')(data,6,2);\nvar until2 = global.get('parseAsHex','memoryonly')(data,8,2);\nvar until3 = global.get('parseAsHex','memoryonly')(data,10,2);\n\nobj.mode = global.get('getBits','memoryonly')(bits2, 0, 2);\nvar ctrlmode = global.get('get_ctrl_mode','memoryonly')(obj.mode);\nobj.modeStr =  ctrlmode ? ctrlmode : obj.mode;\nobj.dstsetting = global.get('getBits','memoryonly')(bits2, 3, 1);  //is automatically switching to DST activated\nobj.langateway = global.get('getBits','memoryonly')(bits2, 4, 1);  //??\nobj.panel = global.get('getBits','memoryonly')(bits2, 5, 1);       //1 if the heating thermostat is locked for manually setting the temperature at the device\nobj.rferror = global.get('getBits','memoryonly')(bits2, 6, 1);     //communication with link partner (what does that mean?)\nobj.batterylow = global.get('getBits','memoryonly')(bits2, 7, 1);  //1 if battery is low\nobj.battery = obj.batterylow ? \"low\" : \"ok\";\n\nif (until3 > 0) data.untilStr = global.get('MAX_ParseDateTime','memoryonly')(until1, until2, until3);\nobj.measuredTemp = (until2 > 0) ? (((until1 & 0x01)<<8) + until2) / 10 : 0;\n\n//If the control mode is not \"temporary\", the cube sends the current (measured) temperature\nif ((obj.mode == 2) || (obj.measuredTemp == 0)) obj.measuredTemp = null;\nif (obj.mode != 2) delete obj.untilStr;\n\n\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "x": 720,
-        "y": 1060,
+        "y": 1020,
         "wires": [
             [
                 "c7fea7e9.cfb6f8"
@@ -584,13 +602,13 @@
         "type": "function",
         "z": "d2b21613.ad4a58",
         "name": "30= ShutterContactState",
-        "func": "function getBits(value, offset, len) {\n        var mask = 0;\n        while (len > 0) {\n                mask = mask << 1;\n                mask++;\n                len--;\n        }\n        return ((value >> offset) & mask);\n}\n\nvar obj = msg.payload;\nvar data = msg.payload.payload;\n\nvar bits = (\"0x\"+data.substr(0,2))*1;\nobj.isopen = (getBits(bits, 0, 2) === 0) ? 0 : 1;\nobj.unkbits = getBits(bits, 2, 4);\nobj.rferror = getBits(bits, 6, 1);\nobj.batterylow = getBits(bits, 7, 1);\nobj.battery = data.batterylow ? \"low\" : \"ok\";\n\t\t\nmsg.payload = obj;\t\t\nreturn msg;",
+        "func": "\n\nvar obj = msg.payload;\nvar data = msg.payload.payload;\n\nvar bits = global.get('parseAsHex', 'memoryOnly')(data,0,2);\nobj.isopen = (global.get('getBits', 'memoryOnly')(bits, 0, 2) === 0) ? 0 : 1;\nobj.unkbits = global.get('getBits', 'memoryOnly')(bits, 2, 4);\nobj.rferror = global.get('getBits', 'memoryOnly')(bits, 6, 1);\nobj.batterylow = global.get('getBits', 'memoryOnly')(bits, 7, 1);\nobj.battery = data.batterylow ? \"low\" : \"ok\";\n\t\t\nmsg.payload = obj;\t\t\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "x": 730,
-        "y": 940,
+        "y": 900,
         "wires": [
             [
                 "c7fea7e9.cfb6f8"
@@ -602,7 +620,7 @@
         "type": "function",
         "z": "d2b21613.ad4a58",
         "name": "00 = PairPing",
-        "func": "function hex_to_ascii(str1)\n {\n\tvar hex  = str1.toString();\n\tvar str = '';\n\tfor (var n = 0; n < hex.length; n += 2) {\n\t\tstr += String.fromCharCode(parseInt(hex.substr(n, 2), 16));\n\t}\n\treturn str;\n }\n\nvar device_types = {\n    \"0\" : \"Cube\",\n    \"1\" : \"HeatingThermostat\",\n    \"2\" : \"HeatingThermostatPlus\",\n    \"3\" : \"WallMountedThermostat\",\n    \"4\" : \"ShutterContact\",\n    \"5\" : \"PushButton\",\n    \"6\" : \"virtualShutterContact\",\n    \"7\" : \"virtualThermostat\",\n    \"8\" : \"PlugAdapter\",\n    \"9\" : \"new\"\n};\n\n\nvar obj = msg.payload;\nvar data = msg.payload.payload;\n\nobj.firmware = parseInt( Number(\"0x\"+data.substr(0,2)) , 10 );\nobj.deviceTypeRaw = parseInt( Number(\"0x\"+data.substr(2,2)) , 10 );\nobj.deviceType = device_types[obj.deviceTypeRaw];\nobj.testresult = parseInt( Number(\"0x\"+data.substr(4,2)) , 10 );\nobj.serial = hex_to_ascii(data.substr(6));\n\n//save deviceType and serial\nmsg.culfw.deviceType = obj.deviceType;\nmsg.culfw.serial = obj.serial;\n\nvar Name = msg.culfw.Name;\nglobal.set(Name,msg.culfw);\n\nmsg.culfw.BusyWith = 1;\nmsg.culfw.Step = -1;\n\nreturn msg;\n",
+        "func": "// A pairing request is only allowed when the global flag \"AllowPairing\" is set to true.\n//\nvar config = global.get(\"culfw_config\");\nif( config.AllowPairing){\n    \n    var obj = msg.payload;\n    var data = obj.payload;\n    \n    obj.firmware = global.get('parseAsHex', 'memoryOnly')(data,0,2);\n    obj.deviceTypeRaw = global.get('parseAsHex', 'memoryOnly')(data,2,2);\n    obj.deviceType = global.get('get_deviceType','memoryOnly')(obj.deviceTypeRaw);\n    obj.testresult = global.get('parseAsHex', 'memoryOnly')(data,4,2);\n    obj.serial = global.get('hex_to_ascii','memoryOnly')(data.substr(6));\n    \n    //save deviceType and serial\n    msg.culfw.deviceType = obj.deviceType;\n    msg.culfw.serial = obj.serial;\n    \n    var Name = msg.culfw.Name;\n    global.set(Name,msg.culfw);\n    \n    msg.culfw.BusyWith = 1;\n    msg.culfw.Step = -1;\n\n}\nelse{\n    return null;\n}\nreturn msg;\n",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -611,7 +629,8 @@
         "y": 620,
         "wires": [
             [
-                "86582ae8.52a6d8"
+                "86582ae8.52a6d8",
+                "c7fea7e9.cfb6f8"
             ]
         ]
     },
@@ -620,13 +639,13 @@
         "type": "function",
         "z": "d2b21613.ad4a58",
         "name": "40 = SetTemperature",
-        "func": "var ctrl_modes = { \n\t'0' : \"auto\",\n\t'1' : \"manual\",\n\t'2' : \"temporary\",\n\t'3' : \"boost\",\n}; \n\nvar obj = msg.payload;\nvar data = obj.payload;\n\n\nvar bits =  (\"0x\"+data.substr(0,2))*1;\nmsg.payload.mode = bits >> 6;\nmsg.payload.modeStr = ctrl_modes[msg.payload.mode] ? ctrl_modes[msg.payload.mode] : msg.payload.mode;\nmsg.payload.desiredTemperature = (bits & 0x3F) / 2.0; // Convert to degree celcius.\n\t\t\n\nreturn msg;",
+        "func": "var obj = msg.payload;\nvar data = obj.payload;\n\n\nvar bits =  global.get('parseAsHex', 'memoryOnly')(data,0,2);\nmsg.payload.mode = bits >> 6;\nvar ctrlmode = global.get('get_ctrl_mode','memoryOnly')(msg.payload.mode);\nmsg.payload.modeStr = ctrlmode ? ctrlmode : msg.payload.mode;\nmsg.payload.desiredTemp = (bits & 0x3F) / 2.0;      \n\t\t\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "x": 720,
-        "y": 980,
+        "y": 940,
         "wires": [
             [
                 "c7fea7e9.cfb6f8"
@@ -638,7 +657,7 @@
         "type": "function",
         "z": "d2b21613.ad4a58",
         "name": "03 = Time Information",
-        "func": "// Z 0FA50003 17D0C0 124C82 \n//     payload = 0014134AD420\n\nvar obj = msg.payload;\nvar data = obj.payload;\n\nobj.year = 2000+ (\"0x\"+data.substr(0,2))*1;\nobj.day =  (\"0x\"+data.substr(2,2))*1;\nobj.hour =  ((\"0x\"+data.substr(4,2))*1 ) & 0x1F;\nobj.min =  ((\"0x\"+data.substr(6,2))*1) & 0x3F;\nobj.sec = ((\"0x\"+data.substr(8,2))*1) & 0x3F;\nobj.month = ((((\"0x\"+data.substr(6,2))*1) >> 6) << 2) | (((\"0x\"+data.substr(8,2))*1) >> 6); // this is just guessed according to FHEM\n\n// unknown\nobj.unk1 = ((\"0x\"+data.substr(4,2))*1 ) >> 5;\nobj.unk2 = ((\"0x\"+data.substr(6,2))*1 ) >> 6;\nobj.unk3 = ((\"0x\"+data.substr(8,2))*1 ) >> 6;\n\nreturn msg;",
+        "func": "// Z 0FA50003 17D0C0 124C82 \n//     payload = 0014134AD420\n\nvar obj = msg.payload;\nvar data = obj.payload;\n\nobj.year = 2000+ global.get('parseAsHex', 'memoryOnly')(data,0,2);\nobj.day =  global.get('parseAsHex', 'memoryOnly')(data,2,2);\nobj.hour =  global.get('parseAsHex', 'memoryOnly')(data,4,2) & 0x1F;\nobj.min =  global.get('parseAsHex', 'memoryOnly')(data,6,2) & 0x3F;\nobj.sec = global.get('parseAsHex', 'memoryOnly')(data,8,2) & 0x3F;\nvar m1 = (global.get('parseAsHex', 'memoryOnly')(data,6,2)>>6)<<2;\nvar m2 = (global.get('parseAsHex', 'memoryOnly')(data,8,2)>>6);\nobj.month = m1 | m2; \n\n// unknown\nobj.unk1 = global.get('parseAsHex', 'memoryOnly')(data,4,2) >> 5;\nobj.unk2 = global.get('parseAsHex', 'memoryOnly')(data,6,2) >> 6;\nobj.unk3 = global.get('parseAsHex', 'memoryOnly')(data,8,2) >> 6;\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -678,8 +697,8 @@
         "createDir": false,
         "overwriteFile": "false",
         "encoding": "none",
-        "x": 340,
-        "y": 900,
+        "x": 320,
+        "y": 1000,
         "wires": [
             []
         ]
@@ -713,7 +732,7 @@
         "initialize": "",
         "finalize": "",
         "x": 730,
-        "y": 820,
+        "y": 780,
         "wires": [
             [
                 "c7fea7e9.cfb6f8"
@@ -731,7 +750,7 @@
         "initialize": "",
         "finalize": "",
         "x": 720,
-        "y": 860,
+        "y": 820,
         "wires": [
             [
                 "c7fea7e9.cfb6f8"
@@ -767,7 +786,7 @@
         "initialize": "",
         "finalize": "",
         "x": 700,
-        "y": 900,
+        "y": 860,
         "wires": [
             [
                 "c7fea7e9.cfb6f8"
@@ -802,7 +821,7 @@
         "type": "function",
         "z": "d2b21613.ad4a58",
         "name": "Update culfw status object",
-        "func": "var objIn = msg.payload;\n\nvar emptyCulfw = {\n    Name: \"\",\n    LastMessage: 0,\n    TimeOut: -1,\n    BusyWith: -1,\n    Step: -1\n};\n    \nvar Name = \"culfw_\"+objIn.deviceId;\nvar culfw = global.get(Name) || emptyCulfw;\n\nculfw.Name = Name;\nculfw.LastMessage = Date.now();     // time of last message\n\n// properties added later during development.\nif( !culfw.hasOwnProperty('deviceType') ){\n    culfw.deviceType = '';\n}\nif( !culfw.hasOwnProperty('serial') ){\n    culfw.serial = '';\n}\n\nglobal.set(culfw.Name,culfw);\n\nmsg.culfw = culfw;\n\nreturn msg;",
+        "func": "var objIn = msg.payload;\n\nvar emptyCulfw = {\n    Name: \"\",\n    deviceType: \"\",\n    serial: \"\",\n    LastMessage: 0,\n    TimeOut: -1,\n    BusyWith: -1,\n    Step: -1\n};\n    \nvar Name = \"culfw_\"+objIn.src;\nvar culfw = global.get(Name) || emptyCulfw;\n\nculfw.Name = Name;\nculfw.LastMessage = Date.now();     // time of last message\n\nglobal.set(culfw.Name,culfw);\n\nmsg.culfw = culfw;\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -830,7 +849,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 510,
-        "y": 560,
+        "y": 520,
         "wires": []
     },
     {
@@ -913,8 +932,8 @@
         "id": "cdeeb387.4cd0a",
         "type": "function",
         "z": "4eef0155.6397c",
-        "name": "Send PairPong or Reset",
-        "func": "/*  PairPing received \n    sent a PairPong or Reset if paired with another DeviceId\n\n    output 1 -> send PairPong\n    output 2 -> send Reset\n    \n */\nvar config = global.get(\"culfw_config\");\n\nvar culfw = msg.culfw;\n\n// The PairPing message has an ascii id of this device\n// Add it to the culfw object\nculfw.serial = msg.payload.serial;\n\nvar msg1 = null; // pairpong output\nvar msg2 = null; // reset output\n\n// if dest != \"000000\" and not our id: this device is still paired with a different Culfw or Cube\nif( msg.payload.dest != config.DeviceId && msg.payload.dest != \"000000\"){\n    culfw.Step = 1;                 // wacht op Ack\n    \n    // sent this reset in name of someone else.\n    msg2 = {\n            sender: msg.payload.dest,  \n            dest: msg.payload.deviceId\n    };\n    \n}\nelse{\n    culfw.Step = 1;                 // wacht op Ack\n    msg1 = msg;\n}\n\n\nglobal.set( culfw.Name , culfw);\n\nreturn [msg1,msg2];",
+        "name": "Send PairPong or email",
+        "func": "/*  PairPing received \n    sent a PairPong \n    if paired with another source, it should be reset.\n    Don't do this automatic: sent an email with info\n\n    output 1 -> send PairPong\n    output 2 -> send email\n    \n */\nvar config = global.get(\"culfw_config\");\n\nvar culfw = msg.culfw;\n\n// The PairPing message has an ascii id of this device\n// Add it to the culfw object\nculfw.serial = msg.payload.serial;\n\nvar msg1 = null; // pairpong output\nvar msg2 = null; // reset output\n\n// if dest != \"000000\" and not our id: this device is still paired with a different Culfw or Cube\nif( msg.payload.dst != config.DeviceId && msg.payload.dst != \"000000\"){\n    culfw.Step = -1;                 // stop waiting\n    \n    msg2 = msg;\n    \n}\nelse{\n    culfw.Step = 1;                 // wacht op Ack\n    msg1 = msg;\n}\n\n\nglobal.set( culfw.Name , culfw);\n\nreturn [msg1,msg2];",
         "outputs": 2,
         "noerr": 0,
         "initialize": "",
@@ -926,8 +945,7 @@
                 "efa1f042.9b4ad"
             ],
             [
-                "37d04547.f7048a",
-                "aa7b1a6d.f726c8"
+                "dda03b7a.7a2b18"
             ]
         ]
     },
@@ -936,7 +954,7 @@
         "type": "function",
         "z": "4eef0155.6397c",
         "name": "Pack and Send",
-        "func": "/*  Build een bericht dat verzonden kan worden.\n\n    indien msg.sender gedefinieerd is, moet dit als verzender gebruikt worden.\n        (reset van aan ander toestel gebonden apparaat)\n        \n    msg.payload is een object met volgende properties:\n    \nmsgType - msg type raw\ndest    - destination address (3byte - 000000 for broadcast)\ngroupId - groep id\npayload - payload...\n\nZ  0E E0 05 40 17D0C0 137BFC 04 63 000000\nZs 0E 00 00 40 012345 137A0A 00 6C 000000\n\nZs0F000040012345137A0A006C000000\n\n1ste byte= lengte -> wordt hier berekend\n2de byte = msgCounter -> voorlopig 0\n3de byte flag - control byte (flag ?) -> voorlopig 0\n5de parameter = sender  - sender address (3byte) -> dit toestel, voorlopig vast.\n\n*/\n\nvar config = global.get(\"culfw_config\");\n\nvar obj = msg.payload;\nvar mySelf = \"\";\nif( msg.sender === undefined || msg.sender === null){\n    mySelf = config.DeviceId;\n}else{\n    mySelf = msg.sender;\n}\n\n\nmsgCounter = \"00\";\nflag = \"00\";\n\nvar bericht = msgCounter + flag + obj.msgType + mySelf + obj.dest + obj.groupId + obj.payload;\n\nvar len = (bericht.length / 2 + 0).toString(16);\nif( len.length == 1 ){\n    len = \"0\"+len;\n}\n\nmsg.payload = \"Zs\"+len.toString(16).toUpperCase()+bericht.toUpperCase();\n\nreturn msg;",
+        "func": "/*  Build een bericht dat verzonden kan worden.\n\n    indien msg.sender gedefinieerd is, moet dit als verzender gebruikt worden.\n        (reset van aan ander toestel gebonden apparaat)\n        \n    msg.payload is een object met volgende properties:\n    \nmsgType - msg type raw\ndest    - destination address (3byte - 000000 for broadcast)\ngroupId - groep id\npayload - payload...\n\nZ  0E E0 05 40 17D0C0 137BFC 04 63 000000\nZs 0E 00 00 40 012345 137A0A 00 6C 000000\n\nZs0F000040012345137A0A006C000000\n\n1ste byte= lengte -> wordt hier berekend\n2de byte = msgCounter -> voorlopig 0\n3de byte flag - control byte (flag ?) -> voorlopig 0\n5de parameter = sender  - sender address (3byte) -> dit toestel, voorlopig vast.\n\n*/\n\nvar config = global.get(\"culfw_config\");\n\nvar obj = msg.payload;\nvar mySelf = \"\";\nif( msg.sender === undefined || msg.sender === null){\n    mySelf = config.DeviceId;\n}else{\n    mySelf = msg.sender;\n}\n\n\nmsgCounter = \"00\";\nflag = \"00\";\n\nvar bericht = msgCounter + flag + obj.msgType + mySelf + obj.dst + obj.groupId + obj.payload;\n\nvar len = (bericht.length / 2 + 0).toString(16);\nif( len.length == 1 ){\n    len = \"0\"+len;\n}\n\nmsg.payload = \"Zs\"+len.toString(16).toUpperCase()+bericht.toUpperCase();\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -958,7 +976,7 @@
             "993c810.5c6668",
             "1ffa7a9.ae20785"
         ],
-        "x": 915,
+        "x": 1015,
         "y": 360,
         "wires": []
     },
@@ -972,8 +990,8 @@
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 450,
-        "y": 420,
+        "x": 490,
+        "y": 440,
         "wires": [
             [
                 "6ef05a26.568f54"
@@ -1006,8 +1024,7 @@
         "y": 380,
         "wires": [
             [
-                "cdeeb387.4cd0a",
-                "beb3b8af.473358"
+                "cdeeb387.4cd0a"
             ],
             [
                 "63c99c58.70f514"
@@ -1027,8 +1044,7 @@
         "y": 380,
         "wires": [
             [
-                "d7de046b.5a74f8",
-                "9e0417a7.1447a8"
+                "d7de046b.5a74f8"
             ]
         ]
     },
@@ -1047,39 +1063,10 @@
         "wires": []
     },
     {
-        "id": "1fe01808.73b1f8",
-        "type": "inject",
-        "z": "4eef0155.6397c",
-        "name": "send V",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "V",
-        "payloadType": "str",
-        "x": 90,
-        "y": 20,
-        "wires": [
-            [
-                "19e8dcd9.fce143"
-            ]
-        ]
-    },
-    {
         "id": "6a839b60.f95504",
         "type": "inject",
         "z": "4eef0155.6397c",
-        "name": "Enable Moritz",
+        "name": "Startup",
         "props": [
             {
                 "p": "payload"
@@ -1094,13 +1081,13 @@
         "once": true,
         "onceDelay": "0.5",
         "topic": "",
-        "payload": "Zr",
-        "payloadType": "str",
+        "payload": "",
+        "payloadType": "date",
         "x": 120,
-        "y": 60,
+        "y": 40,
         "wires": [
             [
-                "19e8dcd9.fce143"
+                "c4ed81f9.c2b11"
             ]
         ]
     },
@@ -1109,13 +1096,13 @@
         "type": "function",
         "z": "4eef0155.6397c",
         "name": "add CRLF and start listening again",
-        "func": "msg.payload = msg.payload + '\\r\\nZr\\r\\n';\nmsg._session = null;    \nreturn msg;",
+        "func": "msg.payload = msg.payload + '\\r\\n';\nif( ! msg.payload.includes('Zr') ){\n    msg.payload = msg.payload + 'Zr\\r\\n';    \n}\nmsg._session = null;    \nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "x": 580,
-        "y": 80,
+        "y": 100,
         "wires": [
             [
                 "f83f5bb0.3a2f08"
@@ -1126,12 +1113,12 @@
         "id": "1ffa7a9.ae20785",
         "type": "link in",
         "z": "4eef0155.6397c",
-        "name": "Verstuur",
+        "name": "Send",
         "links": [
+            "524ac550.271bbc",
             "8ba39b4.14e0068",
-            "c5b7c4c4.d86178",
             "90d05cae.a011f",
-            "524ac550.271bbc"
+            "c5b7c4c4.d86178"
         ],
         "x": 75,
         "y": 140,
@@ -1165,23 +1152,6 @@
         "statusType": "auto",
         "x": 770,
         "y": 720,
-        "wires": []
-    },
-    {
-        "id": "9e0417a7.1447a8",
-        "type": "debug",
-        "z": "4eef0155.6397c",
-        "name": "",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 170,
-        "y": 420,
         "wires": []
     },
     {
@@ -1257,7 +1227,7 @@
         "type": "function",
         "z": "4eef0155.6397c",
         "name": "",
-        "func": "var temp = msg.payload;\n\n/*\nll - length\nnn - msg counter\ncc - control byte (flag ?)\ntt - msg type\nss - sender address (3byte)\ndd - destination address (3byte - 000000 for broadcast)\ngg - groep id\npp - payload...\n\nZ  0E E0 05 40 17D0C0 137BFC 04 63 000000\nZs 0E 00 00 40 012345 137A0A 00 6C 000000\n\nZs0F000040012345137A0A006C000000\n\n*/\nvar culfwNaam = \"culfw_137a0a\";\nvar culfw = context.get(culfwNaam) || {};\n\n// tijd wordt hier altijd aangepast\nculfw.LastMessage = Date.now();\nmsg.culfw = culfw;\n\n//-------------------------------------------------------\nvar bits = (0x40 | (temp*2 & 0x3F)).toString(16);\nvar extra = \"000000\";\n\nvar obj = {};\n\nobj.msgType = \"40\";             // pairpong\nobj.dest = \"137a0a\";\nobj.groupId = \"00\";\nobj.payload = bits + extra;\nculfw.Stap = 1;                 // wacht op Ack\n\nmsg.payload = obj;\nreturn msg;",
+        "func": "var temp = msg.payload;\n\n/*\nll - length\nnn - msg counter\ncc - control byte (flag ?)\ntt - msg type\nss - sender address (3byte)\ndd - destination address (3byte - 000000 for broadcast)\ngg - groep id\npp - payload...\n\nZ  0E E0 05 40 17D0C0 137BFC 04 63 000000\nZs 0E 00 00 40 012345 137A0A 00 6C 000000\n\nZs0F000040012345137A0A006C000000\n\n*/\nvar culfwNaam = \"culfw_137a0a\";\nvar culfw = context.get(culfwNaam) || {};\n\n// tijd wordt hier altijd aangepast\nculfw.LastMessage = Date.now();\nmsg.culfw = culfw;\n\n//-------------------------------------------------------\nvar bits = (0x40 | (temp*2 & 0x3F)).toString(16);\nvar extra = \"000000\";\n\nvar obj = {};\n\nobj.msgType = \"40\";             // pairpong\nobj.dst = \"137a0a\";\nobj.groupId = \"00\";\nobj.payload = bits + extra;\nculfw.Stap = 1;                 // wacht op Ack\n\nmsg.payload = obj;\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -1283,64 +1253,6 @@
         "x": 895,
         "y": 640,
         "wires": []
-    },
-    {
-        "id": "7063caa.8283534",
-        "type": "inject",
-        "z": "1119b2.abf3964e",
-        "name": "Z0C26044213D5620000000021DC",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "Z0C26044213D5620000000021DC",
-        "payloadType": "str",
-        "x": 260,
-        "y": 100,
-        "wires": [
-            [
-                "89e800c6.7722a"
-            ]
-        ]
-    },
-    {
-        "id": "83d74309.fcf3f",
-        "type": "inject",
-        "z": "1119b2.abf3964e",
-        "name": "Z0F000460137BFC00000000190C2C00F0",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "Z0F000460137BFC00000000190C2C00F0",
-        "payloadType": "str",
-        "x": 280,
-        "y": 140,
-        "wires": [
-            [
-                "89e800c6.7722a"
-            ]
-        ]
     },
     {
         "id": "e5480ec3.4d1e4",
@@ -1659,8 +1571,7 @@
         "wires": [
             [
                 "74b15cb6.0ee3c4",
-                "888b6aa3.4bfd78",
-                "a3604b1d.97a938"
+                "888b6aa3.4bfd78"
             ]
         ]
     },
@@ -1698,12 +1609,12 @@
         "type": "function",
         "z": "4eef0155.6397c",
         "name": "PairPong",
-        "func": "var obj = {};\n\nobj.msgType = \"01\";             // pairpong\nobj.dest = msg.payload.deviceId;\nobj.groupId = \"00\";\nobj.payload = \"00\";\n\nmsg.payload = obj;\n\nreturn msg;",
+        "func": "var obj = {};\n\nobj.msgType = \"01\";             // pairpong\nobj.dst = msg.payload.src;\nobj.groupId = \"00\";\nobj.payload = \"00\";\n\nmsg.payload = obj;\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 700,
+        "x": 800,
         "y": 360,
         "wires": [
             [
@@ -1716,7 +1627,7 @@
         "type": "function",
         "z": "4eef0155.6397c",
         "name": "Send Reset",
-        "func": "/* RESET\n\n    msg.sender = send in name of...\n    msg.dest = destination \n\n*/\nobj = {};\nobj.msgType = \"F0\";             // reset\nobj.dest = msg.dest;\nobj.sender = msg.sender;\nobj.groupId = \"00\";\nobj.payload = \"00\";\n\nmsg.payload = obj;\n\nreturn msg;",
+        "func": "/* RESET\n\n    msg.sender = send in name of...\n    msg.dest = destination \n\n*/\nobj = {};\nobj.msgType = \"F0\";             // reset\nobj.dst = msg.dst;\nobj.src = msg.src;\nobj.groupId = \"00\";\nobj.payload = \"00\";\n\nmsg.payload = obj;\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -1735,61 +1646,11 @@
         "z": "4eef0155.6397c",
         "name": "Send Reset",
         "links": [
-            "37d04547.f7048a"
+            "37d04547.f7048a",
+            "d161ac8c.7b06b"
         ],
         "x": 75,
         "y": 180,
-        "wires": [
-            [
-                "50f426f4.d4c488"
-            ]
-        ]
-    },
-    {
-        "id": "37d04547.f7048a",
-        "type": "link out",
-        "z": "4eef0155.6397c",
-        "name": "",
-        "links": [
-            "ea5a5613.cc4ba8"
-        ],
-        "x": 915,
-        "y": 400,
-        "wires": []
-    },
-    {
-        "id": "563d0471.ae843c",
-        "type": "inject",
-        "z": "4eef0155.6397c",
-        "name": "Reset",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            },
-            {
-                "p": "sender",
-                "v": "001122",
-                "vt": "str"
-            },
-            {
-                "p": "dest",
-                "v": "137a0a",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 80,
-        "y": 240,
         "wires": [
             [
                 "50f426f4.d4c488"
@@ -1818,13 +1679,13 @@
         "type": "function",
         "z": "4eef0155.6397c",
         "name": "Queue",
-        "func": "// messages need to be separated from each other when sending.\n// this queue holds messages.\n//\n// if a message arrives for the same device with the same message id, \n// than an existing message, the old message is replaced with the new.\n//----------------------------------------------------------------------\nvar queue = context.get(\"queue\") || [];\n\nif( typeof(msg.payload) != 'boolean' ){\n    var obj = msg.payload;\n    var ix = -1;\n    for( i = 0 ; i < queue.length; i++){\n        var el = queue[i];\n        if( el.culfw.Name == obj.culfw.Name \n            && el.culfw.BusyWith == obj.culfw.BusyWith\n        ){\n            ix = i;\n            break;\n        }\n    }\n    if( ix >= 0){\n        queue[ix] = obj;\n    }else{\n        queue.push(obj);\n    }\n    // send empty message\n    msg = null;\n}\nelse{\n    if( queue.length > 0){\n        msg = {payload: queue.shift() };\n    }else{\n        msg = null;\n    }\n}\n\ncontext.set(\"queue\",queue);\n\nreturn msg;",
+        "func": "// messages need to be separated from each other when sending.\n// this queue holds messages.\n//\n// if a message arrives for the same device with the same message id, \n// than an existing message, the old message is replaced with the new.\n//----------------------------------------------------------------------\nvar queue = context.get(\"queue\") || [];\n\n// Control messages do not start with \"Z\"\nvar ctrlMessage = false;\nif( typeof(msg.payload) != 'boolean'){\n    ctrlMessage = ! msg.payload.startsWith(\"Z\");\n}\n\nif( typeof(msg.payload) != 'boolean' && !ctrlMessage ){\n    var obj = msg.payload;\n    var ix = -1;\n    for( i = 0 ; i < queue.length; i++){\n        var el = queue[i];\n        if( el.culfw.Name == obj.culfw.Name \n            && el.culfw.BusyWith == obj.culfw.BusyWith\n        ){\n            ix = i;\n            break;\n        }\n    }\n    if( ix >= 0){\n        queue[ix] = obj;\n    }else{\n        queue.push(obj);\n    }\n    // send empty message\n    msg = null;\n}\nelse{\n    if( queue.length > 0){\n        msg = {payload: queue.shift() };\n    }else{\n        msg = null;\n    }\n}\n\ncontext.set(\"queue\",queue);\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 870,
-        "y": 80,
+        "x": 810,
+        "y": 100,
         "wires": [
             [
                 "f8a72080.2487b",
@@ -1842,15 +1703,15 @@
                 "p": "payload"
             }
         ],
-        "repeat": "0.2",
+        "repeat": "0.5",
         "crontab": "",
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
         "payload": "true",
         "payloadType": "bool",
-        "x": 880,
-        "y": 20,
+        "x": 840,
+        "y": 40,
         "wires": [
             [
                 "f83f5bb0.3a2f08"
@@ -1862,13 +1723,13 @@
         "type": "function",
         "z": "4eef0155.6397c",
         "name": "Prepare email",
-        "func": "msg.payload = \"culfw device paired\"\n              + \"\\r\\nDeviceId: \"+msg.payload.deviceId\n              + \"\\r\\nType: \"+msg.culfw.deviceType\n              + \"\\r\\nSerial: \"+msg.culfw.serial; \nmsg.from = \"luc.wuyts@a-d-e.net\";\nmsg.topic = \"CULFW Pairing message\";\nreturn msg;",
+        "func": "msg.payload = \"culfw device paired\"\n              + \"\\r\\nDeviceId: \"+msg.payload.src\n              + \"\\r\\nType: \"+msg.culfw.deviceType\n              + \"\\r\\nSerial: \"+msg.culfw.serial; \nmsg.from = \"luc.wuyts@a-d-e.net\";\nmsg.topic = \"CULFW Pairing message\";\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 640,
-        "y": 420,
+        "x": 880,
+        "y": 440,
         "wires": [
             [
                 "46da017c.28168"
@@ -1884,7 +1745,7 @@
             {
                 "p": "culfw_config",
                 "pt": "global",
-                "to": "{\"Name\":\"Cube1\",\"IP\":\"10.0.250.65\",\"Port\":\"2323\",\"DeviceId\":\"001122\"}",
+                "to": "{\"Name\":\"Cube1\",\"IP\":\"10.0.250.65\",\"Port\":\"2323\",\"DeviceId\":\"001122\",\"AllowPairing\":false}",
                 "tot": "json"
             }
         ],
@@ -1931,7 +1792,7 @@
         "links": [
             "c943dfbe.8e51"
         ],
-        "x": 915,
+        "x": 1015,
         "y": 440,
         "wires": []
     },
@@ -2140,7 +2001,7 @@
         "type": "function",
         "z": "d2b21613.ad4a58",
         "name": "Debug Filtering",
-        "func": "/* when filterOn, incoming messages with only specific addresses will pass.\n   (deviceId or dest)\n */\n\nvar filterOn = true;\n\nif( filterOn ){\n    // array with allowed addresses.\n    //var addr = [\"137a0a\" , \"124c82\"];\n    var addr = [\"124c82\"];\n    var objIn = msg.payload;\n    \n    var letpass = false;\n    for( i = 0; i < addr.length; i++){\n        var adr = addr[i];\n        if( objIn.dest === adr || objIn.deviceId === adr ){\n            letpass = true;\n            break;\n        }\n    }\n    \n    if( !letpass ){\n        return null;\n    }\n}\nreturn msg;",
+        "func": "/* when filterOn, incoming messages with only specific addresses will pass.\n   (src or dst)\n */\n\nvar filterOn = true;\n\nif( filterOn ){\n    // array with allowed addresses.\n    var addr = [\"137a0a\" , \"124c82\"];\n    //var addr = [\"124c82\"];\n    var objIn = msg.payload;\n    \n    var letpass = false;\n    for( i = 0; i < addr.length; i++){\n        var adr = addr[i];\n        if( objIn.dst === adr || objIn.src === adr ){\n            letpass = true;\n            break;\n        }\n    }\n    \n    if( !letpass ){\n        return null;\n    }\n}\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -2154,48 +2015,16 @@
         ]
     },
     {
-        "id": "aa7b1a6d.f726c8",
-        "type": "debug",
-        "z": "4eef0155.6397c",
-        "name": "",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "false",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 1050,
-        "y": 380,
-        "wires": []
-    },
-    {
-        "id": "beb3b8af.473358",
-        "type": "debug",
-        "z": "4eef0155.6397c",
-        "name": "",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "false",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 480,
-        "y": 280,
-        "wires": []
-    },
-    {
         "id": "a3604b1d.97a938",
         "type": "file",
         "z": "d2b21613.ad4a58",
-        "name": "Log to c:\\1\\c:\\1\\All Messages.txt",
+        "name": "Log to c:\\1\\All Messages.txt",
         "filename": "c:\\1\\All Messages.txt",
         "appendNewline": true,
         "createDir": false,
         "overwriteFile": "false",
         "encoding": "none",
-        "x": 830,
+        "x": 820,
         "y": 220,
         "wires": [
             []
@@ -2294,7 +2123,7 @@
         "id": "c67728a8.5a03a8",
         "type": "inject",
         "z": "1119b2.abf3964e",
-        "name": "",
+        "name": "WallThermostatState",
         "props": [
             {
                 "p": "payload"
@@ -2309,14 +2138,549 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
-        "payload": "Z0F000003001122124C8200141312A4DE",
+        "payload": "Z0F4A0470124C820000000059012100FE",
         "payloadType": "str",
-        "x": 160,
-        "y": 560,
+        "x": 210,
+        "y": 540,
         "wires": [
             [
                 "89e800c6.7722a"
             ]
         ]
+    },
+    {
+        "id": "5437156b.65840c",
+        "type": "function",
+        "z": "d2b21613.ad4a58",
+        "name": "70 = WallThermostatState",
+        "func": "// Incoming message\n// Z0F 22 04 70 124C82 000000 00 590127010B\n// payload is 10 long !!\n// -- source in ref.lib says it's 14 long ???\n\nvar obj = msg.payload;\nvar data = msg.payload.payload;\n\nvar bits2 = global.get('parseAsHex','memoryonly')(data,0,2);\nobj.displayActualTemp = global.get('parseAsHex','memoryonly')(data,2,2);\nobj.desiredTemp = global.get('parseAsHex','memoryonly')(data,4,2) / 2;\nvar null1 = global.get('parseAsHex','memoryonly')(data,6,2);\nobj.measuredTemp = global.get('parseAsHex','memoryonly')(data,8,2)/10;\n\nobj.mode = global.get('getBits','memoryonly')(bits2, 0, 2);\nvar ctrlmode = global.get('get_ctrl_mode','memoryonly')(obj.mode);\nobj.modeStr =  ctrlmode ? ctrlmode : obj.mode;\nobj.dstsetting = global.get('getBits','memoryonly')(bits2, 3, 1);      //is automatically switching to DST activated\nobj.langateway = global.get('getBits','memoryonly')(bits2, 4, 1);      //??\nobj.panel = global.get('getBits','memoryonly')(bits2, 5, 1);           //1 if the heating thermostat is locked for manually setting the temperature at the device\nobj.rferror = global.get('getBits','memoryonly')(bits2, 6, 1);         //communication with link partner (what does that mean?)\nobj.batterylow = global.get('getBits','memoryonly')(bits2, 7, 1);      //1 if battery is low\nobj.battery = obj.batterylow ? \"low\" : \"ok\";\n\nif (obj.heaterTemp == 0) obj.heaterTemp = null;\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 730,
+        "y": 1060,
+        "wires": [
+            [
+                "c7fea7e9.cfb6f8"
+            ]
+        ]
+    },
+    {
+        "id": "c23b396d.f15088",
+        "type": "inject",
+        "z": "1119b2.abf3964e",
+        "name": "WallThermostatControl",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "Z0C000442113AD30C4F0D001CB41D",
+        "payloadType": "str",
+        "x": 220,
+        "y": 580,
+        "wires": [
+            [
+                "89e800c6.7722a"
+            ]
+        ]
+    },
+    {
+        "id": "f7beb14f.716f3",
+        "type": "catch",
+        "z": "d2b21613.ad4a58",
+        "name": "",
+        "scope": null,
+        "uncaught": true,
+        "x": 120,
+        "y": 100,
+        "wires": [
+            [
+                "8956ac74.968c2"
+            ]
+        ]
+    },
+    {
+        "id": "8956ac74.968c2",
+        "type": "debug",
+        "z": "d2b21613.ad4a58",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 330,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "f105db37.fc4128",
+        "type": "inject",
+        "z": "240222d6.2d9b9e",
+        "name": "On startup",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 150,
+        "y": 280,
+        "wires": [
+            [
+                "9e29c380.3e93c"
+            ]
+        ]
+    },
+    {
+        "id": "9e29c380.3e93c",
+        "type": "function",
+        "z": "240222d6.2d9b9e",
+        "name": "Define functions",
+        "func": "\nglobal.set('get_ctrl_mode',function(value){\n    \n     var ctrl_modes = { \n    \t'0' : \"auto\",\n    \t'1' : \"manual\",\n    \t'2' : \"temporary\",\n    \t'3' : \"boost\",\n    }; \n\n    return ctrl_modes[value];\n}, 'memoryOnly');\n\nglobal.set('get_deviceType',function(value){\n    var device_types = {\n        \"0\" : \"Cube\",\n        \"1\" : \"HeatingThermostat\",\n        \"2\" : \"HeatingThermostatPlus\",\n        \"3\" : \"WallMountedThermostat\",\n        \"4\" : \"ShutterContact\",\n        \"5\" : \"PushButton\",\n        \"6\" : \"virtualShutterContact\",\n        \"7\" : \"virtualThermostat\",\n        \"8\" : \"PlugAdapter\",\n        \"9\" : \"new\"\n    };\n    return device_types[value];\n},'memoryOnly');\n\n\n\nglobal.set('msgId2Cmd',function(val){\n    var msgIdCmd = {\n        \t\"00\" : \"PairPing\",\n            \"01\" : \"PairPong\",\n            \"02\" : \"Ack\",\n            \"03\" : \"TimeInformation\",\n            \"10\" : \"ConfigWeekProfile\",\n            \"11\" : \"ConfigTemperatures\", //like eco/comfort etc\n            \"12\" : \"ConfigValve\",\n            \"20\" : \"AddLinkPartner\",\n            \"21\" : \"RemoveLinkPartner\",\n            \"22\" : \"SetGroupId\",\n            \"23\" : \"RemoveGroupId\",\n            \"30\" : \"ShutterContactState\",\n            \"40\" : \"SetTemperature\", //to thermostat\n            \"42\" : \"WallThermostatControl\", //by WallMountedThermostat\n            //Sending this without payload to thermostat sets desiredTemperature to the comfort/eco temperature\n            //We don't use it, we just do SetTemperature\n            \"43\" : \"SetComfortTemperature\",\n            \"44\" : \"SetEcoTemperature\",\n            \"50\" : \"PushButtonState\",\n            \"60\" : \"ThermostatState\", //by HeatingThermostat\n            \"70\" : \"WallThermostatState\",\n            \"82\" : \"SetDisplayActualTemperature\",\n            \"F1\" : \"WakeUp\",\n            \"F0\" : \"Reset\",\n    };\n    return msgIdCmd[val];\n},'memoryOnly');\n\n\n// return message length without RSSI information\n// (include leading Z)\nglobal.set('get_messageLength',function(val){\n    var len = {\n        \t\"00\" : 49,   // \"PairPing\",\n            \"01\" : 0,    // \"PairPong\",\n            \"02\" : 0,    // \"Ack\",\n            \"03\" : 0,    // \"TimeInformation\",\n            \"10\" : 0,    // \"ConfigWeekProfile\",\n            \"11\" : 0,    // \"ConfigTemperatures\", //like eco/comfort etc\n            \"12\" : 0,    // \"ConfigValve\",\n            \"20\" : 0,    // \"AddLinkPartner\",\n            \"21\" : 0,    // \"RemoveLinkPartner\",\n            \"22\" : 0,    // \"SetGroupId\",\n            \"23\" : 0,    // \"RemoveGroupId\",\n            \"30\" : 25,   // \"ShutterContactState\",\n            \"40\" : 25,   // \"SetTemperature\", //to thermostat\n            \"42\" : 27,    // \"WallThermostatControl\", //by WallMountedThermostat\n            //Sending this without payload to thermostat sets desiredTemperature to the comfort/eco temperature\n            //We don't use it, we just do SetTemperature\n            \"43\" : 0,    // \"SetComfortTemperature\",\n            \"44\" : 0,    // \"SetEcoTemperature\",\n            \"50\" : 0,    // \"PushButtonState\",\n            \"60\" : 33,   // \"ThermostatState\", //by HeatingThermostat\n            \"70\" : 0,    // \"WallThermostatState\",\n            \"82\" : 0,    // \"SetDisplayActualTemperature\",\n            \"F1\" : 0,    // \"WakeUp\",\n            \"F0\" : 0,    // \"Reset\",\n    };\n    return len[val];\n},'memoryOnly');\n\n\n// str = input string\n// start = starting position in str\n// len = string length in str\n// return:  part of string is parsed as a hex number to decimal.\nglobal.set('parseAsHex' , function( str , start, len ){\n    return parseInt( Number(\"0x\"+str.substr(start,len)) , 10 );\n},'memoryOnly');\n\n\nglobal.set('hex_to_ascii',function (str1) {\n\tvar hex  = str1.toString();\n\tvar str = '';\n\tfor (var n = 0; n < hex.length; n += 2) {\n\t\tstr += String.fromCharCode(parseInt(hex.substr(n, 2), 16));\n\t}\n\treturn str;\n },'memoryOnly');\n \n \n \n global.set('getBits',function(value, offset, len) {\n        var mask = 0;\n        while (len > 0) {\n                mask = mask << 1;\n                mask++;\n                len--;\n        }\n        return ((value >> offset) & mask);\n}, 'memoryOnly');\n \n \n\n\nglobal.set( 'MAX_ParseDateTime' , function (byte1, byte2, byte3) {\n\tvar result = {};\n\tresult.day = byte1 & 0x1F;\n\tresult.month = ((byte1 & 0xE0) >> 4) | (byte2 >> 7);\n\tresult.year = byte2 & 0x3F;\n\tvar time = byte3 & 0x3F;\n\tif ((time % 2) > 0)\n\t\tresult.time = (time / 2) + \":30\";\n\telse\n\t\tresult.time = (time / 2) + \":00\";\n\n\tresult.str = result.day+\".\"+result.month+\".\"+result.year+\" \"+result.time;\n\treturn result;\n}, 'memoryOnly');\n\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 360,
+        "y": 280,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "3237d4bb.05beac",
+        "type": "comment",
+        "z": "240222d6.2d9b9e",
+        "name": "Define Functions",
+        "info": "",
+        "x": 150,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "fb6968d0.349b78",
+        "type": "inject",
+        "z": "1119b2.abf3964e",
+        "name": "ShutterContactState",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "Z0B1206300FB74E0011220012",
+        "payloadType": "str",
+        "x": 210,
+        "y": 140,
+        "wires": [
+            [
+                "89e800c6.7722a"
+            ]
+        ]
+    },
+    {
+        "id": "7b4576d2.514668",
+        "type": "function",
+        "z": "4eef0155.6397c",
+        "name": "email - paired with other",
+        "func": "msg.payload = \"culfw device is already paired with unknown source..\"\n              + \"\\r\\This device: \"+msg.payload.src\n              + \"\\r\\nPaired with: \"+msg.payload.dst\n              + \"\\r\\nType: \"+msg.culfw.deviceType\n              + \"\\r\\nSerial: \"+msg.culfw.serial; \nmsg.from = \"luc.wuyts@a-d-e.net\";\nmsg.topic = \"CULFW Pairing message - FAILED\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 850,
+        "y": 400,
+        "wires": [
+            [
+                "46da017c.28168"
+            ]
+        ]
+    },
+    {
+        "id": "6303f6e8.c9e938",
+        "type": "inject",
+        "z": "1119b2.abf3964e",
+        "name": "Reset",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "sender",
+                "v": "001122",
+                "vt": "str"
+            },
+            {
+                "p": "dest",
+                "v": "137a0a",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 170,
+        "y": 700,
+        "wires": [
+            [
+                "d161ac8c.7b06b"
+            ]
+        ]
+    },
+    {
+        "id": "d161ac8c.7b06b",
+        "type": "link out",
+        "z": "1119b2.abf3964e",
+        "name": "",
+        "links": [
+            "ea5a5613.cc4ba8"
+        ],
+        "x": 655,
+        "y": 700,
+        "wires": []
+    },
+    {
+        "id": "cd9d6735.35f3b8",
+        "type": "inject",
+        "z": "27628eec.90fe82",
+        "name": "Reboot CUL",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "B00",
+        "payloadType": "str",
+        "x": 210,
+        "y": 140,
+        "wires": [
+            [
+                "91617ff4.f200b"
+            ]
+        ]
+    },
+    {
+        "id": "91617ff4.f200b",
+        "type": "link out",
+        "z": "27628eec.90fe82",
+        "name": "",
+        "links": [
+            "9bd59bd5.ff4d18"
+        ],
+        "x": 635,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "488da49c.c44f5c",
+        "type": "inject",
+        "z": "27628eec.90fe82",
+        "name": "Get MAC",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "Rim",
+        "payloadType": "str",
+        "x": 220,
+        "y": 180,
+        "wires": [
+            [
+                "91617ff4.f200b"
+            ]
+        ]
+    },
+    {
+        "id": "2de449dc.87b066",
+        "type": "inject",
+        "z": "27628eec.90fe82",
+        "name": "GET IP",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "Ria",
+        "payloadType": "str",
+        "x": 230,
+        "y": 220,
+        "wires": [
+            [
+                "91617ff4.f200b"
+            ]
+        ]
+    },
+    {
+        "id": "3dd8b7ca.cb7a08",
+        "type": "inject",
+        "z": "27628eec.90fe82",
+        "name": "GET Time running",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "t",
+        "payloadType": "str",
+        "x": 190,
+        "y": 260,
+        "wires": [
+            [
+                "91617ff4.f200b"
+            ]
+        ]
+    },
+    {
+        "id": "9bd59bd5.ff4d18",
+        "type": "link in",
+        "z": "4eef0155.6397c",
+        "name": "Send Raw",
+        "links": [
+            "91617ff4.f200b"
+        ],
+        "x": 75,
+        "y": 100,
+        "wires": [
+            [
+                "19e8dcd9.fce143"
+            ]
+        ]
+    },
+    {
+        "id": "d177e570.e45ea8",
+        "type": "comment",
+        "z": "27628eec.90fe82",
+        "name": "To see the output in the debug window - switch on \"does not start with Z\"",
+        "info": "",
+        "x": 400,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "d1ba929f.a82a2",
+        "type": "inject",
+        "z": "27628eec.90fe82",
+        "name": "X - RF Time left ?? (unclear)",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "X",
+        "payloadType": "str",
+        "x": 160,
+        "y": 300,
+        "wires": [
+            [
+                "91617ff4.f200b"
+            ]
+        ]
+    },
+    {
+        "id": "d6803507.66b518",
+        "type": "inject",
+        "z": "27628eec.90fe82",
+        "name": "Add RSSI info",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "X20",
+        "payloadType": "str",
+        "x": 210,
+        "y": 340,
+        "wires": [
+            [
+                "91617ff4.f200b"
+            ]
+        ]
+    },
+    {
+        "id": "8930a408.953108",
+        "type": "inject",
+        "z": "27628eec.90fe82",
+        "name": "NO  RSSI info",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "X00",
+        "payloadType": "str",
+        "x": 210,
+        "y": 380,
+        "wires": [
+            [
+                "91617ff4.f200b"
+            ]
+        ]
+    },
+    {
+        "id": "ed378889.e64458",
+        "type": "comment",
+        "z": "27628eec.90fe82",
+        "name": "After sending, resend   Enable Moritz",
+        "info": "",
+        "x": 290,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "c4ed81f9.c2b11",
+        "type": "function",
+        "z": "4eef0155.6397c",
+        "name": "Enable RSSI and Moritz protocol",
+        "func": "msg1 = { payload: \"X20\"};\nmsg2 = { payload: \"Zr\" };\nreturn [[msg1,msg2]];",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 350,
+        "y": 40,
+        "wires": [
+            [
+                "19e8dcd9.fce143"
+            ]
+        ]
+    },
+    {
+        "id": "dda03b7a.7a2b18",
+        "type": "rbe",
+        "z": "4eef0155.6397c",
+        "name": "",
+        "func": "rbe",
+        "gap": "",
+        "start": "",
+        "inout": "out",
+        "property": "payload",
+        "x": 670,
+        "y": 400,
+        "wires": [
+            [
+                "7b4576d2.514668"
+            ]
+        ]
+    },
+    {
+        "id": "4fb2e47e.2691ac",
+        "type": "debug",
+        "z": "d2b21613.ad4a58",
+        "name": "ERROR",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 440,
+        "y": 460,
+        "wires": []
     }
 ]

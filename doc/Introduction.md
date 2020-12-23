@@ -30,7 +30,9 @@ When you send Zr, you start seeing device messages in your telnet session.
 
 To interface this from within node-red, i found these articles very helpfull.
 
-* [only reading and parsing messages](https://github.com/hobbyquaker/cul/blob/master/lib/moritz.js)
+* [FHEM forum](https://svn.fhem.de/fhem/trunk/fhem/FHEM/14_CUL_MAX.pm)
+* [node.js dataparser doc](https://openbase.io/js/cul/documentation)
+* [parsing messages](https://github.com/hobbyquaker/cul/blob/master/lib/moritz.js)
 * [more complete library](https://gl.petatech.eu/root/HomeBot/-/blob/7afa28792a9ffbb35c9302fa1d174c354883f665/FHEM/14_CUL_MAX.pm)
 * [OpenHab maxcul binding](https://github.com/openhab/openhab1-addons/tree/master/bundles/binding/org.openhab.binding.maxcul)
 * [(original CUBE protocol) Link to max-cube protocol](https://github.com/Bouni/max-cube-protocol)
