@@ -1,5 +1,12 @@
 [
     {
+        "id": "9f49092d.477e18",
+        "type": "tab",
+        "label": "UI (some tests)",
+        "disabled": false,
+        "info": ""
+    },
+    {
         "id": "1119b2.abf3964e",
         "type": "tab",
         "label": "culfw messages for testing",
@@ -233,37 +240,22 @@
     {
         "id": "8a50f58a.83fee8",
         "type": "ui_group",
-        "name": "Nest",
-        "tab": "d8a3365d.44e008",
+        "name": "Pairing",
+        "tab": "ed309753.b80dc8",
         "order": 1,
         "disp": true,
-        "width": "6",
+        "width": "14",
         "collapse": false
-    },
-    {
-        "id": "d8a3365d.44e008",
-        "type": "ui_tab",
-        "name": "Nest Thermostat sample",
-        "icon": "dashboard",
-        "order": 1
     },
     {
         "id": "a7510c97.d4775",
         "type": "ui_group",
         "name": "RUN TIME",
-        "tab": "c4016218.4116b",
+        "tab": "",
         "order": 1,
         "disp": true,
         "width": "6",
         "collapse": false
-    },
-    {
-        "id": "c4016218.4116b",
-        "type": "ui_tab",
-        "name": "OEE Monitoring",
-        "icon": "show_chart",
-        "disabled": false,
-        "hidden": false
     },
     {
         "id": "4e1181dc.53dca",
@@ -283,6 +275,14 @@
         "out": "char",
         "addchar": "",
         "responsetimeout": "10000"
+    },
+    {
+        "id": "ed309753.b80dc8",
+        "type": "ui_tab",
+        "name": "TEST MAX! - CULFW",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
     },
     {
         "id": "74b15cb6.0ee3c4",
@@ -2681,6 +2681,241 @@
         "statusType": "auto",
         "x": 440,
         "y": 460,
+        "wires": []
+    },
+    {
+        "id": "593250fd.cfaeb",
+        "type": "ui_button",
+        "z": "9f49092d.477e18",
+        "name": "",
+        "group": "8a50f58a.83fee8",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "Start Pairing",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "icon": "",
+        "payload": "true",
+        "payloadType": "bool",
+        "topic": "",
+        "x": 530,
+        "y": 120,
+        "wires": [
+            [
+                "1bf907c8.57a548",
+                "f695bde1.72e36",
+                "4d33500f.6a1c2"
+            ]
+        ]
+    },
+    {
+        "id": "4d33500f.6a1c2",
+        "type": "debug",
+        "z": "9f49092d.477e18",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 830,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "1bf907c8.57a548",
+        "type": "function",
+        "z": "9f49092d.477e18",
+        "name": "Set On",
+        "func": "msg.enabled = false;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 520,
+        "y": 180,
+        "wires": [
+            [
+                "5180e43d.0d706c",
+                "5ac1fa22.cb5394"
+            ]
+        ]
+    },
+    {
+        "id": "f695bde1.72e36",
+        "type": "delay",
+        "z": "9f49092d.477e18",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "20",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "x": 520,
+        "y": 60,
+        "wires": [
+            [
+                "55f2ece3.6e4214"
+            ]
+        ]
+    },
+    {
+        "id": "55f2ece3.6e4214",
+        "type": "function",
+        "z": "9f49092d.477e18",
+        "name": "Set Off",
+        "func": "msg.enabled = true;\nmsg.payload = false;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 150,
+        "y": 120,
+        "wires": [
+            [
+                "5180e43d.0d706c"
+            ]
+        ]
+    },
+    {
+        "id": "d1d164af.50de48",
+        "type": "inject",
+        "z": "9f49092d.477e18",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 150,
+        "y": 40,
+        "wires": [
+            [
+                "55f2ece3.6e4214"
+            ]
+        ]
+    },
+    {
+        "id": "5180e43d.0d706c",
+        "type": "function",
+        "z": "9f49092d.477e18",
+        "name": "Save AllowPairing",
+        "func": "var config = global.get(\"culfw_config\");\nconfig.AllowPairing = msg.payload;\nglobal.set(\"culfw_config\",config);\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 330,
+        "y": 120,
+        "wires": [
+            [
+                "593250fd.cfaeb"
+            ]
+        ]
+    },
+    {
+        "id": "85a4d344.15d49",
+        "type": "ui_template",
+        "z": "9f49092d.477e18",
+        "group": "8a50f58a.83fee8",
+        "name": "",
+        "order": 2,
+        "width": "14",
+        "height": "13",
+        "format": "<table>\n    <tr ng-repeat=\"x in msg.payload\" >\n        <td>{{x}}</td>\n    </tr>\n</table>\n",
+        "storeOutMessages": true,
+        "fwdInMessages": true,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "x": 540,
+        "y": 300,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "5ac1fa22.cb5394",
+        "type": "function",
+        "z": "9f49092d.477e18",
+        "name": "",
+        "func": "// Show information about pairing \n// Text is reset when pairing starts.\n//\n\nvar lines = context.get(\"lines\") || [];\n\n// starts pairing\nif( typeof(msg.payload) === 'boolean' ){\n    lines = [];\n    lines.push(\"Pairing Started\");\n}\nelse{\n    lines.push(msg.payload + lines.length);\n}\n\ncontext.set(\"lines\",lines);\n\nmsg = { payload: lines };\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 350,
+        "y": 300,
+        "wires": [
+            [
+                "85a4d344.15d49",
+                "2f0e0a08.b2eae6"
+            ]
+        ]
+    },
+    {
+        "id": "83261aa6.0d8f68",
+        "type": "inject",
+        "z": "9f49092d.477e18",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "Testing....",
+        "payloadType": "str",
+        "x": 170,
+        "y": 380,
+        "wires": [
+            [
+                "5ac1fa22.cb5394"
+            ]
+        ]
+    },
+    {
+        "id": "2f0e0a08.b2eae6",
+        "type": "debug",
+        "z": "9f49092d.477e18",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 520,
+        "y": 380,
         "wires": []
     }
 ]
