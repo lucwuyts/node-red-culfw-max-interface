@@ -939,7 +939,7 @@
         "initialize": "",
         "finalize": "",
         "x": 490,
-        "y": 380,
+        "y": 360,
         "wires": [
             [
                 "efa1f042.9b4ad"
@@ -990,8 +990,8 @@
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 490,
-        "y": 440,
+        "x": 450,
+        "y": 480,
         "wires": [
             [
                 "6ef05a26.568f54"
@@ -1024,7 +1024,8 @@
         "y": 380,
         "wires": [
             [
-                "cdeeb387.4cd0a"
+                "cdeeb387.4cd0a",
+                "d9e138a9.756948"
             ],
             [
                 "63c99c58.70f514"
@@ -1105,7 +1106,8 @@
         "y": 100,
         "wires": [
             [
-                "f83f5bb0.3a2f08"
+                "f83f5bb0.3a2f08",
+                "f8a72080.2487b"
             ]
         ]
     },
@@ -1670,8 +1672,8 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 1000,
-        "y": 140,
+        "x": 980,
+        "y": 180,
         "wires": []
     },
     {
@@ -1722,14 +1724,14 @@
         "id": "6ef05a26.568f54",
         "type": "function",
         "z": "4eef0155.6397c",
-        "name": "Prepare email",
-        "func": "msg.payload = \"culfw device paired\"\n              + \"\\r\\nDeviceId: \"+msg.payload.src\n              + \"\\r\\nType: \"+msg.culfw.deviceType\n              + \"\\r\\nSerial: \"+msg.culfw.serial; \nmsg.from = \"luc.wuyts@a-d-e.net\";\nmsg.topic = \"CULFW Pairing message\";\nreturn msg;",
+        "name": "Prepare loggin message",
+        "func": "msg.payload = \"culfw device paired\"\n              + \"\\r\\nDeviceId: \"+msg.payload.src\n              + \"\\r\\nType: \"+msg.culfw.deviceType\n              + \"\\r\\nSerial: \"+msg.culfw.serial\n              + \"\\r\\n\";\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 880,
-        "y": 440,
+        "x": 830,
+        "y": 480,
         "wires": [
             [
                 "46da017c.28168"
@@ -1755,42 +1757,12 @@
         "wires": []
     },
     {
-        "id": "66e8cbe1.2da474",
-        "type": "e-mail",
-        "z": "240222d6.2d9b9e",
-        "server": "smtp.scarlet.be",
-        "port": "25",
-        "secure": false,
-        "tls": false,
-        "name": "luc.wuyts@a-d-e.net",
-        "dname": "",
-        "x": 220,
-        "y": 160,
-        "wires": []
-    },
-    {
-        "id": "c943dfbe.8e51",
-        "type": "link in",
-        "z": "240222d6.2d9b9e",
-        "name": "Send Email",
-        "links": [
-            "46da017c.28168"
-        ],
-        "x": 75,
-        "y": 160,
-        "wires": [
-            [
-                "66e8cbe1.2da474"
-            ]
-        ]
-    },
-    {
         "id": "46da017c.28168",
         "type": "link out",
         "z": "4eef0155.6397c",
         "name": "Send Email",
         "links": [
-            "c943dfbe.8e51"
+            "bc355385.15c3f"
         ],
         "x": 1015,
         "y": 440,
@@ -2001,7 +1973,7 @@
         "type": "function",
         "z": "d2b21613.ad4a58",
         "name": "Debug Filtering",
-        "func": "/* when filterOn, incoming messages with only specific addresses will pass.\n   (src or dst)\n */\n\nvar filterOn = true;\n\nif( filterOn ){\n    // array with allowed addresses.\n    var addr = [\"137a0a\" , \"124c82\"];\n    //var addr = [\"124c82\"];\n    var objIn = msg.payload;\n    \n    var letpass = false;\n    for( i = 0; i < addr.length; i++){\n        var adr = addr[i];\n        if( objIn.dst === adr || objIn.src === adr ){\n            letpass = true;\n            break;\n        }\n    }\n    \n    if( !letpass ){\n        return null;\n    }\n}\nreturn msg;",
+        "func": "/* when filterOn, incoming messages with only specific addresses will pass.\n   (src or dst)\n */\n\nvar filterOn = false;\n\nif( filterOn ){\n    // array with allowed addresses.\n    var addr = [\"137a0a\" , \"124c82\"];\n    //var addr = [\"124c82\"];\n    var objIn = msg.payload;\n    \n    var letpass = false;\n    for( i = 0; i < addr.length; i++){\n        var adr = addr[i];\n        if( objIn.dst === adr || objIn.src === adr ){\n            letpass = true;\n            break;\n        }\n    }\n    \n    if( !letpass ){\n        return null;\n    }\n}\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -2314,13 +2286,13 @@
         "id": "7b4576d2.514668",
         "type": "function",
         "z": "4eef0155.6397c",
-        "name": "email - paired with other",
-        "func": "msg.payload = \"culfw device is already paired with unknown source..\"\n              + \"\\r\\This device: \"+msg.payload.src\n              + \"\\r\\nPaired with: \"+msg.payload.dst\n              + \"\\r\\nType: \"+msg.culfw.deviceType\n              + \"\\r\\nSerial: \"+msg.culfw.serial; \nmsg.from = \"luc.wuyts@a-d-e.net\";\nmsg.topic = \"CULFW Pairing message - FAILED\";\nreturn msg;",
+        "name": "Log - paired with other",
+        "func": "msg.payload = \"culfw device is already paired with unknown source..\"\n              + \"\\r\\This device: \"+msg.payload.src\n              + \"\\r\\nPaired with: \"+msg.payload.dst\n              + \"\\r\\nType: \"+msg.culfw.deviceType\n              + \"\\r\\nSerial: \"+msg.culfw.serial\n               + \"\\r\\n\"; \n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 850,
+        "x": 840,
         "y": 400,
         "wires": [
             [
@@ -2706,26 +2678,9 @@
         "wires": [
             [
                 "1bf907c8.57a548",
-                "f695bde1.72e36",
-                "4d33500f.6a1c2"
+                "f695bde1.72e36"
             ]
         ]
-    },
-    {
-        "id": "4d33500f.6a1c2",
-        "type": "debug",
-        "z": "9f49092d.477e18",
-        "name": "",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "false",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 830,
-        "y": 120,
-        "wires": []
     },
     {
         "id": "1bf907c8.57a548",
@@ -2752,7 +2707,7 @@
         "z": "9f49092d.477e18",
         "name": "",
         "pauseType": "delay",
-        "timeout": "20",
+        "timeout": "60",
         "timeoutUnits": "seconds",
         "rate": "1",
         "nbRateUnits": "1",
@@ -2791,7 +2746,7 @@
         "id": "d1d164af.50de48",
         "type": "inject",
         "z": "9f49092d.477e18",
-        "name": "",
+        "name": "On Startup",
         "props": [
             {
                 "p": "payload"
@@ -2803,12 +2758,12 @@
         ],
         "repeat": "",
         "crontab": "",
-        "once": false,
+        "once": true,
         "onceDelay": 0.1,
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 150,
+        "x": 130,
         "y": 40,
         "wires": [
             [
@@ -2848,8 +2803,8 @@
         "fwdInMessages": true,
         "resendOnRefresh": true,
         "templateScope": "local",
-        "x": 540,
-        "y": 300,
+        "x": 640,
+        "y": 240,
         "wires": [
             []
         ]
@@ -2858,44 +2813,30 @@
         "id": "5ac1fa22.cb5394",
         "type": "function",
         "z": "9f49092d.477e18",
-        "name": "",
+        "name": "Logging",
         "func": "// Show information about pairing \n// Text is reset when pairing starts.\n//\n\nvar lines = context.get(\"lines\") || [];\n\n// starts pairing\nif( typeof(msg.payload) === 'boolean' ){\n    lines = [];\n    lines.push(\"Pairing Started\");\n}\nelse{\n    lines.push(msg.payload + lines.length);\n}\n\ncontext.set(\"lines\",lines);\n\nmsg = { payload: lines };\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 350,
-        "y": 300,
+        "x": 450,
+        "y": 240,
         "wires": [
             [
-                "85a4d344.15d49",
-                "2f0e0a08.b2eae6"
+                "85a4d344.15d49"
             ]
         ]
     },
     {
-        "id": "83261aa6.0d8f68",
-        "type": "inject",
+        "id": "bc355385.15c3f",
+        "type": "link in",
         "z": "9f49092d.477e18",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
+        "name": "Log Pairing",
+        "links": [
+            "46da017c.28168"
         ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "Testing....",
-        "payloadType": "str",
-        "x": 170,
-        "y": 380,
+        "x": 175,
+        "y": 240,
         "wires": [
             [
                 "5ac1fa22.cb5394"
@@ -2903,19 +2844,21 @@
         ]
     },
     {
-        "id": "2f0e0a08.b2eae6",
-        "type": "debug",
-        "z": "9f49092d.477e18",
-        "name": "",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "false",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 520,
-        "y": 380,
-        "wires": []
+        "id": "d9e138a9.756948",
+        "type": "function",
+        "z": "4eef0155.6397c",
+        "name": "Log - PairPing received",
+        "func": "msg.Payload = \"PairPing received from: \"+msg.payload.src;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 490,
+        "y": 440,
+        "wires": [
+            [
+                "46da017c.28168"
+            ]
+        ]
     }
 ]
